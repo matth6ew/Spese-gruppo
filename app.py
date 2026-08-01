@@ -76,7 +76,7 @@ def save_expense_to_sheet(payer, description, amount, participants):
 # --- Gestione Password ---
 st.sidebar.title("🔒 Autenticazione")
 password = st.sidebar.text_input("Inserisci Password Admin", type="password")
-is_admin = password == "zonozonozono"
+is_admin = password == "zono"  # <--- NUOVA PASSWORD
 
 if is_admin:
     st.sidebar.success("Modalità Modifica Attiva 🔓")
