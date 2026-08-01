@@ -7,6 +7,20 @@ st.set_page_config(
     page_title="Spese di Gruppo", page_icon="💰", layout="centered"
 )
 
+# --- CONFIGURAZIONE PARTECIPANTI FISSI ---
+MEMBERS = [
+    "Serena",
+    "Matteo",
+    "Donghui",
+    "Kevin",
+    "Samantha",
+    "Nixia",
+    "Alessia",
+    "Lorenzo",
+    "Giulia",
+    "Johnny",
+]
+
 
 # --- Connessione a Google Sheets ---
 @st.cache_resource
@@ -41,20 +55,20 @@ def load_expenses():
             expenses.append(
                 {
                     "payer": row["Chi ha pagato"],
-                    "description": row.get("Cosa", "Spesa Generica"),  # Fallback se la colonna non c'era
+                    "description": row.get("Cosa", "Spesa Generica"),
                     "amount": float(row["Importo"]),
                     "participants": participants,
                 }
             )
         return expenses
     except Exception:
-        # Se il foglio è totalmente vuoto, crea le 4 intestazioni
+        # Se il foglio è vuoto, inizializza le 4 intestazioni
         sheet.append_row(["Chi ha pagato", "Cosa", "Importo", "Partecipanti"])
         return []
 
 
 def save_expense_to_sheet(payer, description, amount, participants):
-    """Aggiunge una riga nel Google Sheet con la descrizione."""
+    """Aggiunge una riga nel Google Sheet."""
     participants_str = ", ".join(participants)
     sheet.append_row([payer, description, amount, participants_str])
 
@@ -72,36 +86,46 @@ else:
 # --- Interfaccia Principale ---
 st.title("💰 Spese di Gruppo")
 
-# Carichiamo i dati dal foglio
 expenses = load_expenses()
 
-# --- MODULO AGGIUNTA (Solo se la password è corretta) ---
+# --- MODULO AGGIUNTA (Solo Admin) ---
 if is_admin:
     with st.form("expense_form", clear_on_submit=True):
         st.subheader("➕ Aggiungi spesa")
-        payer = st.text_input("Chi ha pagato?")
+
+        # Selezione chi ha pagato
+        payer = st.selectbox("Chi ha pagato?", options=MEMBERS)
+
         description = st.text_input("Cosa ha pagato? (es. Cena, Benzina)")
         amount = st.number_input(
             "Importo (€)", min_value=0.01, step=0.50, format="%.2f"
         )
-        participants_raw = st.text_input("Per chi? (nomi separati da virgola)")
+
+        # Spunta per tutti i partecipanti
+        all_members = st.checkbox("Per tutti i partecipanti", value=True)
+
+        if not all_members:
+            selected_participants = st.multiselect(
+                "Per chi? (seleziona uno o più)", options=MEMBERS
+            )
+        else:
+            selected_participants = MEMBERS
 
         if st.form_submit_button("Aggiungi"):
-            if payer and description and amount > 0 and participants_raw:
-                parts = [
-                    p.strip() for p in participants_raw.split(",") if p.strip()
-                ]
-                save_expense_to_sheet(payer.strip(), description.strip(), amount, parts)
+            if payer and description and amount > 0 and selected_participants:
+                save_expense_to_sheet(
+                    payer, description.strip(), amount, selected_participants
+                )
                 st.success("Spesa salvata su Google Sheets!")
                 st.rerun()
             else:
-                st.error("Compila tutti i campi.")
+                st.error("Compila tutti i campi e seleziona almeno un partecipante.")
 else:
     st.warning(
-        "🔑 Inserisci la password nella barra laterale a sinistra per aggiungere o cancellare le spese."
+        "🔑 Inserisci la password nella barra laterale per aggiungere o cancellare le spese."
     )
 
-# --- VISUALIZZAZIONE E CONGUAGLI (Visibili a tutti) ---
+# --- VISUALIZZAZIONE E CONGUAGLI ---
 if expenses:
     st.subheader(f"📋 Spese salvate ({len(expenses)})")
     for exp in expenses:
@@ -109,7 +133,6 @@ if expenses:
             f"• **{exp['payer']}** ha pagato **{exp['amount']:.2f} €** per *{exp['description']}* (per {', '.join(exp['participants'])})"
         )
 
-    # Il pulsante di svuotamento appare solo agli Admin
     if is_admin:
         st.write("---")
         if st.button("🗑️ Svuota tutto"):
