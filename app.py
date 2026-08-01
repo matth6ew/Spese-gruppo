@@ -76,7 +76,7 @@ def save_expense_to_sheet(payer, description, amount, participants):
 # --- Gestione Password ---
 st.sidebar.title("🔒 Autenticazione")
 password = st.sidebar.text_input("Inserisci Password Admin", type="password")
-is_admin = password == "zono"  # <--- NUOVA PASSWORD
+is_admin = password == "zono"
 
 if is_admin:
     st.sidebar.success("Modalità Modifica Attiva 🔓")
@@ -101,15 +101,12 @@ if is_admin:
             "Importo (€)", min_value=0.01, step=0.50, format="%.2f"
         )
 
-        # Spunta per tutti i partecipanti
-        all_members = st.checkbox("Per tutti i partecipanti", value=True)
-
-        if not all_members:
-            selected_participants = st.multiselect(
-                "Per chi? (seleziona uno o più)", options=MEMBERS
-            )
-        else:
-            selected_participants = MEMBERS
+        # Selezione partecipanti (tutti selezionati di default, modificabili subito)
+        selected_participants = st.multiselect(
+            "Per chi? (rimuovi chi non partecipa alla spesa)",
+            options=MEMBERS,
+            default=MEMBERS,
+        )
 
         if st.form_submit_button("Aggiungi"):
             if payer and description and amount > 0 and selected_participants:
@@ -135,10 +132,33 @@ if expenses:
 
     if is_admin:
         st.write("---")
-        if st.button("🗑️ Svuota tutto"):
-            sheet.clear()
-            sheet.append_row(["Chi ha pagato", "Cosa", "Importo", "Partecipanti"])
-            st.rerun()
+
+        if "confirm_delete" not in st.session_state:
+            st.session_state.confirm_delete = False
+
+        col_del1, col_del2 = st.columns([1, 2])
+
+        with col_del1:
+            if st.button("🗑️ Svuota tutto"):
+                st.session_state.confirm_delete = True
+
+        # Finestra di conferma cancellazione
+        if st.session_state.confirm_delete:
+            st.warning("⚠️ Sei sicuro di voler cancellare TUTTE le spese salvate?")
+            col_conf1, col_conf2 = st.columns([1, 1])
+
+            with col_conf1:
+                if st.button("🔴 Sì, cancella tutto", type="primary"):
+                    sheet.clear()
+                    sheet.append_row(["Chi ha pagato", "Cosa", "Importo", "Partecipanti"])
+                    st.session_state.confirm_delete = False
+                    st.success("Tutte le spese sono state cancellate!")
+                    st.rerun()
+
+            with col_conf2:
+                if st.button("❌ Annulla"):
+                    st.session_state.confirm_delete = False
+                    st.rerun()
 
     # Calcolo Conguagli
     balances = defaultdict(float)
