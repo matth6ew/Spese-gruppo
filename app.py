@@ -1,76 +1,123 @@
-import json
-import os
 from collections import defaultdict
+import gspread
+from google.oauth2.service_account import Credentials
 import streamlit as st
-
-DB_FILE = "spese_gruppo.json"
 
 st.set_page_config(
     page_title="Spese di Gruppo", page_icon="💰", layout="centered"
 )
 
 
+# --- Connessione a Google Sheets ---
+@st.cache_resource
+def init_connection():
+    scope = [
+        "https://www.googleapis.com/auth/spreadsheets",
+        "https://www.googleapis.com/auth/drive",
+    ]
+    creds = Credentials.from_service_account_info(
+        st.secrets["gcp_service_account"], scopes=scope
+    )
+    client = gspread.authorize(creds)
+    return client
+
+
+client = init_connection()
+
+# SOSTITUISCI CON IL NOME ESATTO DEL TUO FOGLIO GOOGLE
+SHEET_NAME = "SpeseGruppo"
+sheet = client.open(SHEET_NAME).sheet1
+
+
 def load_expenses():
-    if os.path.exists(DB_FILE):
-        try:
-            with open(DB_FILE, "r", encoding="utf-8") as f:
-                return json.load(f)
-        except Exception:
-            return []
-    return []
+    """Carica le spese dal Google Sheet."""
+    try:
+        records = sheet.get_all_records()
+        expenses = []
+        for row in records:
+            participants = [
+                p.strip() for p in str(row["Partecipanti"]).split(",")
+            ]
+            expenses.append(
+                {
+                    "payer": row["Chi ha pagato"],
+                    "amount": float(row["Importo"]),
+                    "participants": participants,
+                }
+            )
+        return expenses
+    except Exception:
+        # Se il foglio è vuoto, inizializza le intestazioni
+        sheet.append_row(["Chi ha pagato", "Importo", "Partecipanti"])
+        return []
 
 
-def save_expenses(expenses):
-    with open(DB_FILE, "w", encoding="utf-8") as f:
-        json.dump(expenses, f, ensure_ascii=False, indent=4)
+def save_expense_to_sheet(payer, amount, participants):
+    """Aggiunge una riga nel Google Sheet."""
+    participants_str = ", ".join(participants)
+    sheet.append_row([payer, amount, participants_str])
 
 
-if "expenses" not in st.session_state:
-    st.session_state.expenses = load_expenses()
+# --- Gestione Password ---
+st.sidebar.title("🔒 Autenticazione")
+password = st.sidebar.text_input("Inserisci Password Admin", type="password")
+is_admin = password == "zonozonozono"
 
+if is_admin:
+    st.sidebar.success("Modalità Modifica Attiva 🔓")
+else:
+    st.sidebar.info("Modalità Sola Lettura 👁️")
+
+# --- Interfaccia Principale ---
 st.title("💰 Spese di Gruppo")
 
-# Form di inserimento
-with st.form("expense_form", clear_on_submit=True):
-    st.subheader("➕ Aggiungi spesa")
-    payer = st.text_input("Chi ha pagato?")
-    amount = st.number_input(
-        "Importo (€)", min_value=0.01, step=0.50, format="%.2f"
+# Carichiamo i dati dal foglio
+expenses = load_expenses()
+
+# --- MODULO AGGIUNTA (Solo se la password è corretta) ---
+if is_admin:
+    with st.form("expense_form", clear_on_submit=True):
+        st.subheader("➕ Aggiungi spesa")
+        payer = st.text_input("Chi ha pagato?")
+        amount = st.number_input(
+            "Importo (€)", min_value=0.01, step=0.50, format="%.2f"
+        )
+        participants_raw = st.text_input("Per chi? (nomi separati da virgola)")
+
+        if st.form_submit_button("Aggiungi"):
+            if payer and amount > 0 and participants_raw:
+                parts = [
+                    p.strip() for p in participants_raw.split(",") if p.strip()
+                ]
+                save_expense_to_sheet(payer.strip(), amount, parts)
+                st.success("Spesa salvata su Google Sheets!")
+                st.rerun()
+            else:
+                st.error("Compila tutti i campi.")
+else:
+    st.warning(
+        "🔑 Inserisci la password nella barra laterale a sinistra per aggiungere o cancellare le spese."
     )
-    participants_raw = st.text_input("Per chi? (nomi separati da virgola)")
 
-    if st.form_submit_button("Aggiungi"):
-        if payer and amount > 0 and participants_raw:
-            parts = [
-                p.strip() for p in participants_raw.split(",") if p.strip()
-            ]
-            st.session_state.expenses.append(
-                {"payer": payer.strip(), "amount": amount, "participants": parts}
-            )
-            save_expenses(st.session_state.expenses)
-            st.success("Spesa salvata!")
-            st.rerun()
-        else:
-            st.error("Compila tutti i campi.")
-
-# Visualizzazione e Conguagli
-if st.session_state.expenses:
-    st.subheader(f"📋 Spese salvate ({len(st.session_state.expenses)})")
-    for exp in st.session_state.expenses:
+# --- VISUALIZZAZIONE E CONGUAGLI (Visibili a tutti) ---
+if expenses:
+    st.subheader(f"📋 Spese salvate ({len(expenses)})")
+    for exp in expenses:
         st.write(
             f"• **{exp['payer']}**: {exp['amount']:.2f} € per *{', '.join(exp['participants'])}*"
         )
 
-    col1, col2 = st.columns(2)
-    with col1:
+    # Il pulsante di svuotamento appare solo agli Admin
+    if is_admin:
+        st.write("---")
         if st.button("🗑️ Svuota tutto"):
-            st.session_state.expenses = []
-            if os.path.exists(DB_FILE):
-                os.remove(DB_FILE)
+            sheet.clear()
+            sheet.append_row(["Chi ha pagato", "Importo", "Partecipanti"])
             st.rerun()
 
+    # Calcolo Conguagli
     balances = defaultdict(float)
-    for exp in st.session_state.expenses:
+    for exp in expenses:
         split_amount = exp["amount"] / len(exp["participants"])
         balances[exp["payer"]] += exp["amount"]
         for p in exp["participants"]:
