@@ -41,21 +41,22 @@ def load_expenses():
             expenses.append(
                 {
                     "payer": row["Chi ha pagato"],
+                    "description": row.get("Cosa", "Spesa Generica"),  # Fallback se la colonna non c'era
                     "amount": float(row["Importo"]),
                     "participants": participants,
                 }
             )
         return expenses
     except Exception:
-        # Se il foglio è vuoto, inizializza le intestazioni
-        sheet.append_row(["Chi ha pagato", "Importo", "Partecipanti"])
+        # Se il foglio è totalmente vuoto, crea le 4 intestazioni
+        sheet.append_row(["Chi ha pagato", "Cosa", "Importo", "Partecipanti"])
         return []
 
 
-def save_expense_to_sheet(payer, amount, participants):
-    """Aggiunge una riga nel Google Sheet."""
+def save_expense_to_sheet(payer, description, amount, participants):
+    """Aggiunge una riga nel Google Sheet con la descrizione."""
     participants_str = ", ".join(participants)
-    sheet.append_row([payer, amount, participants_str])
+    sheet.append_row([payer, description, amount, participants_str])
 
 
 # --- Gestione Password ---
@@ -79,17 +80,18 @@ if is_admin:
     with st.form("expense_form", clear_on_submit=True):
         st.subheader("➕ Aggiungi spesa")
         payer = st.text_input("Chi ha pagato?")
+        description = st.text_input("Cosa ha pagato? (es. Cena, Benzina)")
         amount = st.number_input(
             "Importo (€)", min_value=0.01, step=0.50, format="%.2f"
         )
         participants_raw = st.text_input("Per chi? (nomi separati da virgola)")
 
         if st.form_submit_button("Aggiungi"):
-            if payer and amount > 0 and participants_raw:
+            if payer and description and amount > 0 and participants_raw:
                 parts = [
                     p.strip() for p in participants_raw.split(",") if p.strip()
                 ]
-                save_expense_to_sheet(payer.strip(), amount, parts)
+                save_expense_to_sheet(payer.strip(), description.strip(), amount, parts)
                 st.success("Spesa salvata su Google Sheets!")
                 st.rerun()
             else:
@@ -104,7 +106,7 @@ if expenses:
     st.subheader(f"📋 Spese salvate ({len(expenses)})")
     for exp in expenses:
         st.write(
-            f"• **{exp['payer']}**: {exp['amount']:.2f} € per *{', '.join(exp['participants'])}*"
+            f"• **{exp['payer']}** ha pagato **{exp['amount']:.2f} €** per *{exp['description']}* (per {', '.join(exp['participants'])})"
         )
 
     # Il pulsante di svuotamento appare solo agli Admin
@@ -112,7 +114,7 @@ if expenses:
         st.write("---")
         if st.button("🗑️ Svuota tutto"):
             sheet.clear()
-            sheet.append_row(["Chi ha pagato", "Importo", "Partecipanti"])
+            sheet.append_row(["Chi ha pagato", "Cosa", "Importo", "Partecipanti"])
             st.rerun()
 
     # Calcolo Conguagli
