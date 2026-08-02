@@ -47,8 +47,9 @@ def load_expenses():
     try:
         records = sheet.get_all_records()
         expenses = []
-        for idx, row in enumerate(records, start=2):  # start=2 per tracciare la riga reale (1-indexed + header)
-            # Gestione sicura nel caso 'Partecipanti' non sia popolato correttamente
+        for idx, row in enumerate(
+            records, start=2
+        ):  # start=2 per tracciare la riga reale (1-indexed + header)
             raw_participants = str(row.get("Partecipanti", ""))
             participants = (
                 [p.strip() for p in raw_participants.split(",") if p.strip()]
@@ -88,8 +89,7 @@ def delete_single_expense(row_idx):
 st.sidebar.title("🔒 Autenticazione")
 password = st.sidebar.text_input("Inserisci Password Admin", type="password")
 
-# Consiglio: definisci 'admin_password' nei tuoi secrets (`.streamlit/secrets.toml`)
-admin_password = st.secrets.get("admin_password", "zono") 
+admin_password = st.secrets.get("admin_password", "zono")
 is_admin = password == admin_password
 
 if is_admin:
@@ -135,7 +135,7 @@ else:
 # --- VISUALIZZAZIONE E CONGUAGLI ---
 if expenses:
     st.subheader(f"📋 Spese salvate ({len(expenses)})")
-    
+
     for exp in expenses:
         col_txt, col_act = st.columns([5, 1])
         with col_txt:
@@ -144,9 +144,30 @@ if expenses:
             )
         with col_act:
             if is_admin:
-                if st.button("❌", key=f"del_{exp['row_idx']}", help="Elimina questa spesa"):
-                    delete_single_expense(exp["row_idx"])
-                    st.rerun()
+                delete_key = f"del_{exp['row_idx']}"
+                confirm_key = f"conf_{exp['row_idx']}"
+
+                # Inizializza lo stato di conferma per questa specifica riga se non esiste
+                if confirm_key not in st.session_state:
+                    st.session_state[confirm_key] = False
+
+                if not st.session_state[confirm_key]:
+                    if st.button("❌", key=delete_key, help="Elimina spesa"):
+                        st.session_state[confirm_key] = True
+                        st.rerun()
+                else:
+                    # Mostra pulsanti di conferma rapidi inline o sotto
+                    st.warning("Confermi?")
+                    col_y, col_n = st.columns(2)
+                    with col_y:
+                        if st.button("Sì", key=f"yes_{exp['row_idx']}"):
+                            delete_single_expense(exp["row_idx"])
+                            st.session_state[confirm_key] = False
+                            st.rerun()
+                    with col_n:
+                        if st.button("No", key=f"no_{exp['row_idx']}"):
+                            st.session_state[confirm_key] = False
+                            st.rerun()
 
     # Opzioni di Cancellazione Totale (Solo Admin)
     if is_admin:
