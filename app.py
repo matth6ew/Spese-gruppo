@@ -21,6 +21,8 @@ MEMBERS = [
     "Johnny",
 ]
 
+SHEET_NAME = "SpeseGruppo"
+
 
 # --- Connessione a Google Sheets ---
 @st.cache_resource
@@ -37,32 +39,36 @@ def init_connection():
 
 
 client = init_connection()
-
-# SOSTITUISCI CON IL NOME ESATTO DEL TUO FOGLIO GOOGLE
-SHEET_NAME = "SpeseGruppo"
 sheet = client.open(SHEET_NAME).sheet1
 
 
 def load_expenses():
-    """Carica le spese dal Google Sheet."""
+    """Carica le spese dal Google Sheet proponendo fallback se vuoto."""
     try:
         records = sheet.get_all_records()
         expenses = []
-        for row in records:
-            participants = [
-                p.strip() for p in str(row["Partecipanti"]).split(",")
-            ]
+        for idx, row in enumerate(records, start=2):  # start=2 per tracciare la riga reale (1-indexed + header)
+            # Gestione sicura nel caso 'Partecipanti' non sia popolato correttamente
+            raw_participants = str(row.get("Partecipanti", ""))
+            participants = (
+                [p.strip() for p in raw_participants.split(",") if p.strip()]
+                if raw_participants
+                else []
+            )
+
             expenses.append(
                 {
-                    "payer": row["Chi ha pagato"],
+                    "row_idx": idx,
+                    "payer": row.get("Chi ha pagato", "Sconosciuto"),
                     "description": row.get("Cosa", "Spesa Generica"),
-                    "amount": float(row["Importo"]),
+                    "amount": float(row.get("Importo", 0.0)),
                     "participants": participants,
                 }
             )
         return expenses
     except Exception:
-        # Se il foglio è vuoto, inizializza le 4 intestazioni
+        # Se il foglio è vuoto o corrotto, reinizializza le intestazioni
+        sheet.clear()
         sheet.append_row(["Chi ha pagato", "Cosa", "Importo", "Partecipanti"])
         return []
 
@@ -73,10 +79,18 @@ def save_expense_to_sheet(payer, description, amount, participants):
     sheet.append_row([payer, description, amount, participants_str])
 
 
-# --- Gestione Password ---
+def delete_single_expense(row_idx):
+    """Elimina una riga specifica dal Google Sheet."""
+    sheet.delete_rows(row_idx)
+
+
+# --- Gestione Autenticazione ---
 st.sidebar.title("🔒 Autenticazione")
 password = st.sidebar.text_input("Inserisci Password Admin", type="password")
-is_admin = password == "zono"
+
+# Consiglio: definisci 'admin_password' nei tuoi secrets (`.streamlit/secrets.toml`)
+admin_password = st.secrets.get("admin_password", "zono") 
+is_admin = password == admin_password
 
 if is_admin:
     st.sidebar.success("Modalità Modifica Attiva 🔓")
@@ -93,15 +107,11 @@ if is_admin:
     with st.form("expense_form", clear_on_submit=True):
         st.subheader("➕ Aggiungi spesa")
 
-        # Selezione chi ha pagato
         payer = st.selectbox("Chi ha pagato?", options=MEMBERS)
-
         description = st.text_input("Cosa ha pagato? (es. Cena, Benzina)")
         amount = st.number_input(
             "Importo (€)", min_value=0.01, step=0.50, format="%.2f"
         )
-
-        # Selezione partecipanti (tutti selezionati di default, modificabili subito)
         selected_participants = st.multiselect(
             "Per chi? (rimuovi chi non partecipa alla spesa)",
             options=MEMBERS,
@@ -109,7 +119,7 @@ if is_admin:
         )
 
         if st.form_submit_button("Aggiungi"):
-            if payer and description and amount > 0 and selected_participants:
+            if payer and description.strip() and amount > 0 and selected_participants:
                 save_expense_to_sheet(
                     payer, description.strip(), amount, selected_participants
                 )
@@ -118,31 +128,38 @@ if is_admin:
             else:
                 st.error("Compila tutti i campi e seleziona almeno un partecipante.")
 else:
-    st.warning(
-        "🔑 Inserisci la password nella barra laterale per aggiungere o cancellare le spese."
+    st.info(
+        "🔑 Inserisci la password nella barra laterale per aggiungere o gestire le spese."
     )
 
 # --- VISUALIZZAZIONE E CONGUAGLI ---
 if expenses:
     st.subheader(f"📋 Spese salvate ({len(expenses)})")
+    
     for exp in expenses:
-        st.write(
-            f"• **{exp['payer']}** ha pagato **{exp['amount']:.2f} €** per *{exp['description']}* (per {', '.join(exp['participants'])})"
-        )
+        col_txt, col_act = st.columns([5, 1])
+        with col_txt:
+            st.write(
+                f"• **{exp['payer']}** ha pagato **{exp['amount']:.2f} €** per *{exp['description']}* (per {', '.join(exp['participants'])})"
+            )
+        with col_act:
+            if is_admin:
+                if st.button("❌", key=f"del_{exp['row_idx']}", help="Elimina questa spesa"):
+                    delete_single_expense(exp["row_idx"])
+                    st.rerun()
 
+    # Opzioni di Cancellazione Totale (Solo Admin)
     if is_admin:
         st.write("---")
 
         if "confirm_delete" not in st.session_state:
             st.session_state.confirm_delete = False
 
-        col_del1, col_del2 = st.columns([1, 2])
-
-        with col_del1:
+        if not st.session_state.confirm_delete:
             if st.button("🗑️ Svuota tutto"):
                 st.session_state.confirm_delete = True
+                st.rerun()
 
-        # Finestra di conferma cancellazione
         if st.session_state.confirm_delete:
             st.warning("⚠️ Sei sicuro di voler cancellare TUTTE le spese salvate?")
             col_conf1, col_conf2 = st.columns([1, 1])
@@ -156,17 +173,18 @@ if expenses:
                     st.rerun()
 
             with col_conf2:
-                if st.button("❌ Annulla"):
+                if st.button("Annulla"):
                     st.session_state.confirm_delete = False
                     st.rerun()
 
-    # Calcolo Conguagli
+    # --- CALCOLO CONGUAGLI ---
     balances = defaultdict(float)
     for exp in expenses:
-        split_amount = exp["amount"] / len(exp["participants"])
-        balances[exp["payer"]] += exp["amount"]
-        for p in exp["participants"]:
-            balances[p] -= split_amount
+        if exp["participants"]:
+            split_amount = exp["amount"] / len(exp["participants"])
+            balances[exp["payer"]] += exp["amount"]
+            for p in exp["participants"]:
+                balances[p] -= split_amount
 
     debtors = [[p, -b] for p, b in balances.items() if b < -0.01]
     creditors = [[p, b] for p, b in balances.items() if b > 0.01]
@@ -184,3 +202,6 @@ if expenses:
             i += 1
         if creditors[j][1] < 0.01:
             j += 1
+else:
+    st.write(" Nessuna spesa ancora registrata.")
+    
