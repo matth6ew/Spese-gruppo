@@ -147,7 +147,6 @@ if expenses:
                 delete_key = f"del_{exp['row_idx']}"
                 confirm_key = f"conf_{exp['row_idx']}"
 
-                # Inizializza lo stato di conferma per questa specifica riga se non esiste
                 if confirm_key not in st.session_state:
                     st.session_state[confirm_key] = False
 
@@ -156,7 +155,6 @@ if expenses:
                         st.session_state[confirm_key] = True
                         st.rerun()
                 else:
-                    # Mostra pulsanti di conferma rapidi inline o sotto
                     st.warning("Confermi?")
                     col_y, col_n = st.columns(2)
                     with col_y:
@@ -198,31 +196,50 @@ if expenses:
                     st.session_state.confirm_delete = False
                     st.rerun()
 
-    # --- CALCOLO CONGUAGLI ---
+    # --- CALCOLO CONGUAGLI CORRETTO ---
     balances = defaultdict(float)
+
     for exp in expenses:
-        if exp["participants"]:
-            split_amount = exp["amount"] / len(exp["participants"])
-            balances[exp["payer"]] += exp["amount"]
-            for p in exp["participants"]:
+        participants = exp["participants"]
+        amount = exp["amount"]
+        payer = exp["payer"]
+
+        if participants:
+            split_amount = amount / len(participants)
+            balances[payer] += amount
+            for p in participants:
                 balances[p] -= split_amount
 
-    debtors = [[p, -b] for p, b in balances.items() if b < -0.01]
-    creditors = [[p, b] for p, b in balances.items() if b > 0.01]
+    # Lista debitori (< 0) e creditori (> 0)
+    debtors = [[p, -b] for p, b in balances.items() if b < -0.009]
+    creditors = [[p, b] for p, b in balances.items() if b > 0.009]
+
+    # Ordinamento per ottimizzare il numero di pagamenti
+    debtors.sort(key=lambda x: x[1], reverse=True)
+    creditors.sort(key=lambda x: x[1], reverse=True)
 
     st.subheader("💸 Conguagli")
-    i, j = 0, 0
-    while i < len(debtors) and j < len(creditors):
-        settled = min(debtors[i][1], creditors[j][1])
-        st.info(
-            f"**{debtors[i][0]}** deve dare **{settled:.2f} €** a **{creditors[j][0]}**"
-        )
-        debtors[i][1] -= settled
-        creditors[j][1] -= settled
-        if debtors[i][1] < 0.01:
-            i += 1
-        if creditors[j][1] < 0.01:
-            j += 1
+
+    if not debtors and not creditors:
+        st.success("Tutti i conti sono perfettamente in pari! 🎉")
+    else:
+        i, j = 0, 0
+        while i < len(debtors) and j < len(creditors):
+            settled = min(debtors[i][1], creditors[j][1])
+            settled_rounded = round(settled, 2)
+
+            if settled_rounded > 0:
+                st.info(
+                    f"**{debtors[i][0]}** deve dare **{settled_rounded:.2f} €** a **{creditors[j][0]}**"
+                )
+
+            debtors[i][1] -= settled
+            creditors[j][1] -= settled
+
+            if debtors[i][1] < 0.009:
+                i += 1
+            if j < len(creditors) and creditors[j][1] < 0.009:
+                j += 1
 else:
-    st.write(" Nessuna spesa ancora registrata.")
+    st.write("Nessuna spesa ancora registrata.")
     
