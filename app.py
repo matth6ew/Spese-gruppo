@@ -214,7 +214,9 @@ if expenses:
     for payer, total in sorted(payer_totals.items(), key=lambda x: x[1], reverse=True):
         with st.expander(f"👤 **{payer}** ha anticipato un totale di **{total:.2f} €**"):
             for exp in payer_summary[payer]:
-                st.write(f"- **{exp['amount']:.2f} €** per *{exp['description']}*")
+                # QUI HO AGGIUNTO I PARTECIPANTI DELLA SINGOLA SPESA
+                participants_list = ", ".join(exp['participants'])
+                st.write(f"- **{exp['amount']:.2f} €** per *{exp['description']}* (per {participants_list})")
 
     st.write("---")
 
