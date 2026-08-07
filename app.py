@@ -134,7 +134,7 @@ else:
 
 # --- VISUALIZZAZIONE E CONGUAGLI ---
 if expenses:
-    st.subheader(f"📋 Spese salvate ({len(expenses)})")
+    st.subheader(f"📋 Elenco di tutte le spese ({len(expenses)})")
 
     for exp in expenses:
         col_txt, col_act = st.columns([5, 1])
@@ -196,6 +196,28 @@ if expenses:
                     st.session_state.confirm_delete = False
                     st.rerun()
 
+    st.write("---")
+
+    # --- NUOVA SEZIONE: RIEPILOGO PER PERSONA ---
+    st.subheader("📊 Totale anticipato per persona")
+    
+    # Raggruppo le spese per chi ha pagato
+    payer_summary = defaultdict(list)
+    payer_totals = defaultdict(float)
+    
+    for exp in expenses:
+        payer = exp["payer"]
+        payer_summary[payer].append(exp)
+        payer_totals[payer] += exp["amount"]
+    
+    # Mostro i risultati in ordine decrescente di spesa
+    for payer, total in sorted(payer_totals.items(), key=lambda x: x[1], reverse=True):
+        with st.expander(f"👤 **{payer}** ha anticipato un totale di **{total:.2f} €**"):
+            for exp in payer_summary[payer]:
+                st.write(f"- **{exp['amount']:.2f} €** per *{exp['description']}*")
+
+    st.write("---")
+
     # --- CALCOLO CONGUAGLI CORRETTO ---
     balances = defaultdict(float)
 
@@ -242,4 +264,3 @@ if expenses:
                 j += 1
 else:
     st.write("Nessuna spesa ancora registrata.")
-    
