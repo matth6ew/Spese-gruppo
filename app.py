@@ -134,6 +134,72 @@ else:
 
 # --- VISUALIZZAZIONE E CONGUAGLI ---
 if expenses:
+    st.write("---")
+    
+    # 1. --- CALCOLO E VISUALIZZAZIONE CONGUAGLI ---
+    balances = defaultdict(float)
+
+    for exp in expenses:
+        participants = exp["participants"]
+        amount = exp["amount"]
+        payer = exp["payer"]
+
+        if participants:
+            split_amount = amount / len(participants)
+            balances[payer] += amount
+            for p in participants:
+                balances[p] -= split_amount
+
+    debtors = [[p, -b] for p, b in balances.items() if b < -0.009]
+    creditors = [[p, b] for p, b in balances.items() if b > 0.009]
+    debtors.sort(key=lambda x: x[1], reverse=True)
+    creditors.sort(key=lambda x: x[1], reverse=True)
+
+    st.subheader("💸 Conguagli")
+
+    if not debtors and not creditors:
+        st.success("Tutti i conti sono perfettamente in pari! 🎉")
+    else:
+        i, j = 0, 0
+        while i < len(debtors) and j < len(creditors):
+            settled = min(debtors[i][1], creditors[j][1])
+            settled_rounded = round(settled, 2)
+
+            if settled_rounded > 0:
+                st.info(
+                    f"**{debtors[i][0]}** deve dare **{settled_rounded:.2f} €** a **{creditors[j][0]}**"
+                )
+
+            debtors[i][1] -= settled
+            creditors[j][1] -= settled
+
+            if debtors[i][1] < 0.009:
+                i += 1
+            if j < len(creditors) and creditors[j][1] < 0.009:
+                j += 1
+
+    st.write("---")
+
+    # 2. --- RIEPILOGO PER PERSONA ---
+    st.subheader("📊 Totale anticipato per persona")
+    
+    payer_summary = defaultdict(list)
+    payer_totals = defaultdict(float)
+    
+    for exp in expenses:
+        payer = exp["payer"]
+        payer_summary[payer].append(exp)
+        payer_totals[payer] += exp["amount"]
+    
+    for payer, total in sorted(payer_totals.items(), key=lambda x: x[1], reverse=True):
+        with st.expander(f"👤 **{payer}** ha anticipato un totale di **{total:.2f} €**"):
+            for exp in payer_summary[payer]:
+                participants_list = ", ".join(exp['participants'])
+                st.write(f"- **{exp['amount']:.2f} €** per *{exp['description']}* (per {participants_list})")
+
+    st.write("---")
+
+    # 3. --- LISTONA COMPLETA ---
     st.subheader(f"📋 Elenco di tutte le spese ({len(expenses)})")
 
     for exp in expenses:
@@ -167,7 +233,7 @@ if expenses:
                             st.session_state[confirm_key] = False
                             st.rerun()
 
-    # Opzioni di Cancellazione Totale (Solo Admin)
+    # Opzioni di Cancellazione Totale in fondo (Solo Admin)
     if is_admin:
         st.write("---")
 
@@ -196,73 +262,5 @@ if expenses:
                     st.session_state.confirm_delete = False
                     st.rerun()
 
-    st.write("---")
-
-    # --- NUOVA SEZIONE: RIEPILOGO PER PERSONA ---
-    st.subheader("📊 Totale anticipato per persona")
-    
-    # Raggruppo le spese per chi ha pagato
-    payer_summary = defaultdict(list)
-    payer_totals = defaultdict(float)
-    
-    for exp in expenses:
-        payer = exp["payer"]
-        payer_summary[payer].append(exp)
-        payer_totals[payer] += exp["amount"]
-    
-    # Mostro i risultati in ordine decrescente di spesa
-    for payer, total in sorted(payer_totals.items(), key=lambda x: x[1], reverse=True):
-        with st.expander(f"👤 **{payer}** ha anticipato un totale di **{total:.2f} €**"):
-            for exp in payer_summary[payer]:
-                # QUI HO AGGIUNTO I PARTECIPANTI DELLA SINGOLA SPESA
-                participants_list = ", ".join(exp['participants'])
-                st.write(f"- **{exp['amount']:.2f} €** per *{exp['description']}* (per {participants_list})")
-
-    st.write("---")
-
-    # --- CALCOLO CONGUAGLI CORRETTO ---
-    balances = defaultdict(float)
-
-    for exp in expenses:
-        participants = exp["participants"]
-        amount = exp["amount"]
-        payer = exp["payer"]
-
-        if participants:
-            split_amount = amount / len(participants)
-            balances[payer] += amount
-            for p in participants:
-                balances[p] -= split_amount
-
-    # Lista debitori (< 0) e creditori (> 0)
-    debtors = [[p, -b] for p, b in balances.items() if b < -0.009]
-    creditors = [[p, b] for p, b in balances.items() if b > 0.009]
-
-    # Ordinamento per ottimizzare il numero di pagamenti
-    debtors.sort(key=lambda x: x[1], reverse=True)
-    creditors.sort(key=lambda x: x[1], reverse=True)
-
-    st.subheader("💸 Conguagli")
-
-    if not debtors and not creditors:
-        st.success("Tutti i conti sono perfettamente in pari! 🎉")
-    else:
-        i, j = 0, 0
-        while i < len(debtors) and j < len(creditors):
-            settled = min(debtors[i][1], creditors[j][1])
-            settled_rounded = round(settled, 2)
-
-            if settled_rounded > 0:
-                st.info(
-                    f"**{debtors[i][0]}** deve dare **{settled_rounded:.2f} €** a **{creditors[j][0]}**"
-                )
-
-            debtors[i][1] -= settled
-            creditors[j][1] -= settled
-
-            if debtors[i][1] < 0.009:
-                i += 1
-            if j < len(creditors) and creditors[j][1] < 0.009:
-                j += 1
 else:
     st.write("Nessuna spesa ancora registrata.")
