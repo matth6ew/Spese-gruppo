@@ -1,5 +1,6 @@
 from collections import defaultdict
 from datetime import date, datetime
+from html import escape
 
 import gspread
 import streamlit as st
@@ -154,6 +155,75 @@ st.markdown(
         background: rgba(123,192,67,.055);
         color: #a9d982;
         font-weight: 650;
+    }
+
+    /* Layout custom per i trasferimenti */
+    .settlement-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+    }
+
+    .settlement-col {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .settlement-col.right {
+        align-items: flex-end;
+        text-align: right;
+    }
+
+    .settlement-center {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        flex-grow: 1;
+        text-align: center;
+    }
+
+    .settlement-amount {
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: #a7adb7;
+        margin-bottom: 2px;
+    }
+
+    .settlement-arrow-line {
+        font-size: 1.1rem;
+        color: #6f7783;
+        letter-spacing: 2px;
+    }
+
+    .person-name {
+        font-size: 1rem;
+        font-weight: 750;
+        color: #f1f3f5;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .person-name.debtor::before {
+        content: "";
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #ff4b4b;
+        box-shadow: 0 0 0 3px rgba(255,75,75,.12);
+    }
+
+    .person-name.creditor::after {
+        content: "";
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #7bc043;
+        box-shadow: 0 0 0 3px rgba(123,192,67,.12);
+        margin-left: 6px;
     }
 
     @media (max-width: 640px) {
@@ -485,7 +555,7 @@ def clear_all_dialog(expense_count, total_amount):
     with col2:
         st.metric("Totale", euro(total_amount))
     
-    st.warning("Questa operazione non può essere annullata.")
+    st.warning("Cette operazione non può essere annullata.")
 
     col1, col2 = st.columns(2)
     with col1:
@@ -574,7 +644,7 @@ with tab_dashboard:
         <div class="summary-grid">
             <div class="summary-card">
                 <div class="summary-label">Totale speso</div>
-                <div class="summary-value">{euro(total_amount)}</div>
+                <div class="summary-value">{escape(euro(total_amount))}</div>
             </div>
             <div class="summary-card">
                 <div class="summary-label">Spese</div>
@@ -610,14 +680,25 @@ with tab_dashboard:
         else:
             for s in settlements:
                 with st.container(border=True):
-                    cols = st.columns([3, 2])
-                    with cols[0]:
-                        st.caption("DEVE PAGARE")
-                        st.markdown(f"🔴 **{s['from']}**")
-                        st.markdown("<div style='font-size: 0.8rem; color: #8f96a1; margin: 3px 0;'>↓ riceve</div>", unsafe_allow_html=True)
-                        st.markdown(f"🟢 **{s['to']}**")
-                    with cols[1]:
-                        st.markdown(f"<div style='text-align: right; padding-top: 15px; font-size: 1.25rem; font-weight: 850;'>{euro(s['amount'])}</div>", unsafe_allow_html=True)
+                    st.markdown(
+                        f"""
+                        <div class="settlement-row">
+                            <div class="settlement-col">
+                                <span class="summary-label" style="margin-bottom: 2px;">DEVE PAGARE</span>
+                                <span class="person-name debtor">{escape(s["from"])}</span>
+                            </div>
+                            <div class="settlement-center">
+                                <span class="settlement-amount">{escape(euro(s["amount"]))}</span>
+                                <span class="settlement-arrow-line">──────→</span>
+                            </div>
+                            <div class="settlement-col right">
+                                <span class="summary-label" style="margin-bottom: 2px;">RICEVE</span>
+                                <span class="person-name creditor">{escape(s["to"])}</span>
+                            </div>
+                        </div>
+                        """,
+                        unsafe_allow_html=True,
+                    )
 
         st.markdown(
             """
