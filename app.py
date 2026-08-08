@@ -43,13 +43,17 @@ sheet = client.open(SHEET_NAME).sheet1
 
 
 def load_expenses():
-    """Carica le spese dal Google Sheet proponendo fallback se vuoto."""
+    """Carica le spese dal Google Sheet gestendo in sicurezza i fallback."""
     try:
+        # Verifica se il foglio è completamente vuoto
+        all_values = sheet.get_all_values()
+        if not all_values:
+            sheet.append_row(["Chi ha pagato", "Cosa", "Importo", "Partecipanti"])
+            return []
+
         records = sheet.get_all_records()
         expenses = []
-        for idx, row in enumerate(
-            records, start=2
-        ):  # start=2 per tracciare la riga reale (1-indexed + header)
+        for idx, row in enumerate(records, start=2):
             raw_participants = str(row.get("Partecipanti", ""))
             participants = (
                 [p.strip() for p in raw_participants.split(",") if p.strip()]
@@ -67,10 +71,9 @@ def load_expenses():
                 }
             )
         return expenses
-    except Exception:
-        # Se il foglio è vuoto o corrotto, reinizializza le intestazioni
-        sheet.clear()
-        sheet.append_row(["Chi ha pagato", "Cosa", "Importo", "Partecipanti"])
+    except Exception as e:
+        # Mostra l'errore senza svuotare il foglio
+        st.error(f"Errore di lettura da Google Sheets: {e}")
         return []
 
 
@@ -214,10 +217,8 @@ if expenses:
                 personal_shares[p] += split_amount
                 
     if personal_shares:
-        # Ordiniamo in modo decrescente (da chi ha speso di più a chi meno)
         sorted_shares = sorted(personal_shares.items(), key=lambda x: x[1], reverse=True)
         
-        # Creiamo un layout a colonne per una visualizzazione più pulita
         cols = st.columns(2)
         for idx, (person, share) in enumerate(sorted_shares):
             with cols[idx % 2]:
