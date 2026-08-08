@@ -48,7 +48,7 @@ HEADERS = [
 
 
 # ============================================================
-# CSS MINIMALE E PULITO
+# CSS RESPONSIVE PER MOBILE & DESKTOP
 # ============================================================
 
 st.markdown(
@@ -56,8 +56,10 @@ st.markdown(
     <style>
     .block-container {
         max-width: 1120px;
-        padding-top: 2.2rem;
+        padding-top: 2rem;
         padding-bottom: 5rem;
+        padding-left: 1rem;
+        padding-right: 1rem;
     }
 
     [data-testid="stHeader"] {
@@ -65,7 +67,7 @@ st.markdown(
     }
 
     .app-hero {
-        margin: 0 0 2rem;
+        margin: 0 0 1.5rem;
     }
 
     .app-hero-kicker {
@@ -85,7 +87,7 @@ st.markdown(
 
     .app-hero h1 {
         margin: .75rem 0 .35rem;
-        font-size: clamp(2rem, 4vw, 2.9rem);
+        font-size: clamp(1.8rem, 4vw, 2.9rem);
         line-height: 1.05;
         letter-spacing: -.045em;
         color: #f4f5f7;
@@ -95,73 +97,77 @@ st.markdown(
         margin: 0;
         max-width: 680px;
         color: #8f96a1;
-        font-size: 1rem;
+        font-size: 0.95rem;
         line-height: 1.55;
     }
 
     .summary-grid {
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: .9rem;
-        margin-bottom: 2rem;
+        gap: .75rem;
+        margin-bottom: 1.5rem;
     }
 
     .summary-card {
-        min-height: 112px;
-        padding: 1.15rem 1.2rem;
+        padding: 1rem;
         border: 1px solid rgba(255,255,255,.09);
-        border-radius: 18px;
+        border-radius: 16px;
         background: linear-gradient(145deg, rgba(255,255,255,.055), rgba(255,255,255,.018));
         box-shadow: 0 10px 30px rgba(0,0,0,.12);
     }
 
     .summary-label {
         color: #8e95a0;
-        font-size: .78rem;
+        font-size: .72rem;
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: .055em;
     }
 
     .summary-value {
-        margin-top: .35rem;
+        margin-top: .25rem;
         color: #f3f4f6;
-        font-size: 1.65rem;
+        font-size: 1.35rem;
         line-height: 1.15;
         font-weight: 800;
-        letter-spacing: -.03em;
-    }
-
-    .summary-help {
-        margin-top: .28rem;
-        color: #6f7783;
-        font-size: .78rem;
     }
 
     .section-heading {
-        margin: 2.1rem 0 .95rem;
+        margin: 1.8rem 0 .75rem;
     }
 
     .section-heading h2 {
         margin: 0;
         color: #f1f2f4;
-        font-size: 1.35rem;
-        letter-spacing: -.025em;
+        font-size: 1.25rem;
     }
 
     .section-heading p {
-        margin: .25rem 0 0;
+        margin: .2rem 0 0;
         color: #7f8793;
-        font-size: .9rem;
+        font-size: 0.85rem;
     }
 
     .empty-success {
-        padding: 1rem 1.15rem;
+        padding: 1rem;
         border: 1px solid rgba(123,192,67,.18);
-        border-radius: 15px;
+        border-radius: 14px;
         background: rgba(123,192,67,.055);
         color: #a9d982;
         font-weight: 650;
+    }
+
+    /* Ottimizzazioni specifiche per dispositivi mobili */
+    @media (max-width: 640px) {
+        .summary-grid {
+            grid-template-columns: 1fr;
+            gap: .5rem;
+        }
+        .block-container {
+            padding-top: 1rem;
+            padding-left: 0.75rem;
+            padding-right: 0.75rem;
+        }
     }
     </style>
     """,
@@ -576,17 +582,14 @@ with tab_dashboard:
             <div class="summary-card">
                 <div class="summary-label">Totale speso</div>
                 <div class="summary-value">{escape(euro(total_amount))}</div>
-                <div class="summary-help">Tutte le spese registrate</div>
             </div>
             <div class="summary-card">
                 <div class="summary-label">Spese</div>
                 <div class="summary-value">{expense_count}</div>
-                <div class="summary-help">Movimenti registrati</div>
             </div>
             <div class="summary-card">
                 <div class="summary-label">Da saldare</div>
                 <div class="summary-value">{len(settlements)}</div>
-                <div class="summary-help">Trasferimenti necessari</div>
             </div>
         </div>
         """,
@@ -619,12 +622,12 @@ with tab_dashboard:
                         st.caption("DEVE PAGARE")
                         st.markdown(f"🔴 **{s['from']}**")
                     with cols[1]:
-                        st.markdown("<div style='text-align: center; font-size: 1.2rem; padding-top: 10px;'>→</div>", unsafe_allow_html=True)
+                        st.markdown("<div style='text-align: center; font-size: 1.1rem; padding-top: 8px;'>→</div>", unsafe_allow_html=True)
                     with cols[2]:
                         st.caption("RICEVE")
                         st.markdown(f"🟢 **{s['to']}**")
                     with cols[3]:
-                        st.markdown(f"<div style='text-align: right; font-size: 1.15rem; font-weight: 850; padding-top: 10px;'>{euro(s['amount'])}</div>", unsafe_allow_html=True)
+                        st.markdown(f"<div style='text-align: right; font-size: 1.1rem; font-weight: 800; padding-top: 8px;'>{euro(s['amount'])}</div>", unsafe_allow_html=True)
 
         st.markdown(
             """
@@ -665,8 +668,8 @@ with tab_dashboard:
                         st.markdown(f"**{person}**")
                         st.caption(f"Pagato {euro(payer_totals[person])} · Quota {euro(personal_shares[person])}")
                     with cols[1]:
-                        st.markdown(f"<div style='text-align: right; font-size: 0.72rem; font-weight: 700; color: #8f97a2;'>{status}</div>", unsafe_allow_html=True)
-                        st.markdown(f"<div style='text-align: right; font-size: 1rem; font-weight: 800; {value_color}'>{status_val}</div>", unsafe_allow_html=True)
+                        st.markdown(f"<div style='text-align: right; font-size: 0.7rem; font-weight: 700; color: #8f97a2;'>{status}</div>", unsafe_allow_html=True)
+                        st.markdown(f"<div style='text-align: right; font-size: 0.95rem; font-weight: 800; {value_color}'>{status_val}</div>", unsafe_allow_html=True)
 
 
 # ============================================================
@@ -759,7 +762,7 @@ with tab_new:
             amount = st.number_input("💶 Importo", min_value=0.01, value=10.00, step=0.50, format="%.2f")
 
             st.divider()
-            st.subheader("👥 Chi partecipates?")
+            st.subheader("👥 Chi partecipa?")
             
             selection_mode = st.radio(
                 "Modalità",
