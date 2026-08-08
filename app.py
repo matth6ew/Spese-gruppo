@@ -7,7 +7,7 @@ from google.oauth2.service_account import Credentials
 
 
 # ============================================================
-# CONFIGURAZIONE
+# CONFIGURAZIONE PAGINA
 # ============================================================
 
 st.set_page_config(
@@ -16,6 +16,11 @@ st.set_page_config(
     layout="centered",
     initial_sidebar_state="collapsed",
 )
+
+
+# ============================================================
+# CONFIGURAZIONE APP
+# ============================================================
 
 MEMBERS = [
     "Serena",
@@ -42,281 +47,80 @@ HEADERS = [
 
 
 # ============================================================
-# CSS ADATTIVO AL TEMA STREAMLIT
+# CSS MINIMALE
+#
+# NIENTE colori fissi.
+# NIENTE background nero/bianco.
+#
+# Il tema viene lasciato a Streamlit.
 # ============================================================
 
 st.markdown(
     """
     <style>
 
-    /* ========================================================
-       LAYOUT GENERALE
-       ======================================================== */
+    /* Layout */
 
     .block-container {
         max-width: 1050px;
-        padding-top: 1.5rem;
+        padding-top: 2rem;
         padding-bottom: 4rem;
     }
 
-    /* Usiamo le variabili di Streamlit.
-       NON impostiamo colori fissi. */
-
-    .app-title {
-        color: var(--st-text-color);
-        font-size: 2.2rem;
-        font-weight: 800;
-        letter-spacing: -0.04em;
-        line-height: 1.1;
-        margin-bottom: 0.3rem;
-    }
+    /* Titolo */
 
     .app-subtitle {
-        color: var(--st-gray-color);
-        font-size: 0.95rem;
+        opacity: 0.65;
+        margin-top: -0.5rem;
         margin-bottom: 1.5rem;
     }
 
+    /* Spaziatura */
 
-    /* ========================================================
-       CARD KPI
-       ======================================================== */
-
-    .kpi-card {
-        background: var(--st-secondary-background-color);
-        border: 1px solid var(--st-border-color);
-        border-radius: var(--st-base-radius);
-        padding: 1.15rem 1.2rem;
-        height: 100%;
-        transition: border-color 0.15s ease;
+    .section-space {
+        height: 0.7rem;
     }
 
-    .kpi-card:hover {
-        border-color: var(--st-primary-color);
-    }
-
-    .kpi-label {
-        color: var(--st-gray-text-color);
-        font-size: 0.72rem;
-        font-weight: 750;
-        letter-spacing: 0.055em;
-        text-transform: uppercase;
-    }
-
-    .kpi-value {
-        color: var(--st-text-color);
-        font-size: 1.65rem;
-        font-weight: 800;
-        letter-spacing: -0.025em;
-        margin-top: 0.35rem;
-    }
-
-    .kpi-help {
-        color: var(--st-gray-text-color);
-        font-size: 0.76rem;
-        margin-top: 0.2rem;
-    }
-
-
-    /* ========================================================
-       SEZIONI
-       ======================================================== */
-
-    .section-title {
-        color: var(--st-text-color);
-        font-size: 1.35rem;
-        font-weight: 800;
-        margin-top: 1.5rem;
-        margin-bottom: 0.2rem;
-    }
-
-    .section-description {
-        color: var(--st-gray-text-color);
-        font-size: 0.9rem;
-        margin-bottom: 1rem;
-    }
-
-
-    /* ========================================================
-       CONGUAGLI
-       ======================================================== */
-
-    .settlement-card {
-        background: var(--st-secondary-background-color);
-        border: 1px solid var(--st-border-color);
-        border-radius: var(--st-base-radius);
-        padding: 1.1rem 1.2rem;
-        margin-bottom: 0.7rem;
-    }
-
-    .settlement-card:hover {
-        border-color: var(--st-primary-color);
-    }
-
-    .settlement-label {
-        color: var(--st-gray-text-color);
-        font-size: 0.66rem;
-        font-weight: 750;
-        letter-spacing: 0.06em;
-        text-transform: uppercase;
-        margin-bottom: 0.35rem;
-    }
-
-    .settlement-person {
-        color: var(--st-text-color);
-        font-size: 1.05rem;
-        font-weight: 750;
-    }
-
-    .settlement-arrow {
-        color: var(--st-gray-text-color);
-        font-size: 1.35rem;
-        text-align: center;
-        padding-top: 0.65rem;
-    }
+    /* Conguagli */
 
     .settlement-amount {
-        color: var(--st-text-color);
-        font-size: 1.35rem;
-        font-weight: 850;
+        font-size: 1.45rem;
+        font-weight: 800;
         text-align: center;
-        margin-top: 0.8rem;
+        margin-top: 0.5rem;
     }
 
     .debtor {
-        color: var(--st-red-text-color) !important;
+        color: var(--red-text-color);
+        font-weight: 700;
     }
 
     .creditor {
-        color: var(--st-green-text-color) !important;
-    }
-
-
-    /* ========================================================
-       SALDI PERSONE
-       ======================================================== */
-
-    .person-card {
-        background: var(--st-secondary-background-color);
-        border: 1px solid var(--st-border-color);
-        border-radius: var(--st-base-radius);
-        padding: 0.9rem 1rem;
-        margin-bottom: 0.55rem;
-    }
-
-    .person-name {
-        color: var(--st-text-color);
-        font-weight: 750;
-    }
-
-    .person-meta {
-        color: var(--st-gray-text-color);
-        font-size: 0.78rem;
-    }
-
-    .balance-positive {
-        color: var(--st-green-text-color);
-        font-weight: 800;
-        text-align: right;
-    }
-
-    .balance-negative {
-        color: var(--st-red-text-color);
-        font-weight: 800;
-        text-align: right;
-    }
-
-    .balance-neutral {
-        color: var(--st-gray-text-color);
+        color: var(--green-text-color);
         font-weight: 700;
-        text-align: right;
     }
 
-
-    /* ========================================================
-       SPESA
-       ======================================================== */
-
-    .expense-card {
-        background: var(--st-secondary-background-color);
-        border: 1px solid var(--st-border-color);
-        border-radius: var(--st-base-radius);
-        padding: 0.95rem 1rem;
-        margin-bottom: 0.6rem;
-    }
-
-    .expense-title {
-        color: var(--st-text-color);
-        font-weight: 750;
-        font-size: 0.98rem;
-    }
-
-    .expense-meta {
-        color: var(--st-gray-text-color);
-        font-size: 0.78rem;
-        margin-top: 0.2rem;
-    }
-
-    .expense-amount {
-        color: var(--st-text-color);
-        font-weight: 800;
-        font-size: 1rem;
-        text-align: right;
-    }
-
-
-    /* ========================================================
-       EMPTY STATE
-       ======================================================== */
-
-    .empty-state {
-        background: var(--st-secondary-background-color);
-        border: 1px solid var(--st-border-color);
-        border-radius: var(--st-base-radius);
+    .arrow {
         text-align: center;
-        padding: 2.5rem 1rem;
+        font-size: 1.5rem;
+        opacity: 0.55;
+        padding-top: 0.7rem;
     }
 
-    .empty-icon {
-        font-size: 2.4rem;
-        margin-bottom: 0.4rem;
+    /* Testo secondario */
+
+    .muted {
+        opacity: 0.65;
     }
 
-    .empty-title {
-        color: var(--st-text-color);
-        font-size: 1.1rem;
-        font-weight: 750;
-    }
-
-    .empty-text {
-        color: var(--st-gray-text-color);
-        font-size: 0.9rem;
-        margin-top: 0.3rem;
-    }
-
-
-    /* ========================================================
-       MOBILE
-       ======================================================== */
+    /* Mobile */
 
     @media (max-width: 700px) {
 
         .block-container {
-            padding-left: 0.8rem;
-            padding-right: 0.8rem;
+            padding-left: 1rem;
+            padding-right: 1rem;
             padding-top: 1rem;
-        }
-
-        .app-title {
-            font-size: 1.85rem;
-        }
-
-        .kpi-value {
-            font-size: 1.4rem;
-        }
-
-        .settlement-person {
-            font-size: 0.95rem;
         }
 
     }
@@ -328,14 +132,19 @@ st.markdown(
 
 
 # ============================================================
-# FUNZIONI UTILITY
+# UTILITY
 # ============================================================
 
-def euro(amount):
-    """Formatta un numero in formato monetario italiano."""
+def euro(value):
+    """
+    Formatta un numero in formato italiano.
+
+    Esempio:
+    2730.24 -> 2.730,24 €
+    """
 
     try:
-        value = float(amount)
+        value = float(value)
     except (TypeError, ValueError):
         value = 0.0
 
@@ -349,7 +158,10 @@ def euro(amount):
 
 
 def parse_amount(value):
-    """Converte un importo proveniente da Google Sheets."""
+    """
+    Converte un valore proveniente da Google Sheets
+    in float.
+    """
 
     if value is None or value == "":
         return 0.0
@@ -360,6 +172,8 @@ def parse_amount(value):
     value = str(value).strip()
     value = value.replace("€", "").replace(" ", "")
 
+    # Gestione formato italiano:
+    # 1.234,56 -> 1234.56
     if "," in value:
         value = value.replace(".", "")
         value = value.replace(",", ".")
@@ -371,7 +185,9 @@ def parse_amount(value):
 
 
 def parse_date(value):
-    """Converte una data nei formati supportati."""
+    """
+    Converte una data proveniente da Google Sheets.
+    """
 
     if not value:
         return None
@@ -388,13 +204,8 @@ def parse_date(value):
     ]
 
     for fmt in formats:
-
         try:
-            return datetime.strptime(
-                value,
-                fmt,
-            ).date()
-
+            return datetime.strptime(value, fmt).date()
         except ValueError:
             pass
 
@@ -402,6 +213,9 @@ def parse_date(value):
 
 
 def format_date(value):
+    """
+    Formatta una data in formato italiano.
+    """
 
     parsed = parse_date(value)
 
@@ -439,20 +253,28 @@ sheet = client.open(SHEET_NAME).sheet1
 
 
 # ============================================================
-# INIZIALIZZAZIONE FOGLIO
+# INIZIALIZZAZIONE / MIGRAZIONE GOOGLE SHEET
 # ============================================================
 
 def initialize_sheet():
 
     values = sheet.get_all_values()
 
+    # Foglio completamente vuoto
     if not values:
-
         sheet.append_row(HEADERS)
-
         return
 
     current_headers = values[0]
+
+    # --------------------------------------------------------
+    # Vecchio formato:
+    #
+    # Chi ha pagato
+    # Cosa
+    # Importo
+    # Partecipanti
+    # --------------------------------------------------------
 
     old_headers = [
         "Chi ha pagato",
@@ -461,7 +283,6 @@ def initialize_sheet():
         "Partecipanti",
     ]
 
-    # Migrazione dal vecchio formato
     if current_headers == old_headers:
 
         old_rows = values[1:]
@@ -470,7 +291,9 @@ def initialize_sheet():
 
         for row in old_rows:
 
-            row = row + [""] * (4 - len(row))
+            row = row + [""] * (
+                4 - len(row)
+            )
 
             migrated_rows.append(
                 [
@@ -487,15 +310,12 @@ def initialize_sheet():
         sheet.append_row(HEADERS)
 
         if migrated_rows:
-
-            sheet.append_rows(
-                migrated_rows
-            )
+            sheet.append_rows(migrated_rows)
 
         return
 
+    # Nuovo formato
     if current_headers == HEADERS:
-
         return
 
 
@@ -528,9 +348,9 @@ def load_expenses():
             )
 
             participants = [
-                p.strip()
-                for p in raw_participants.split(",")
-                if p.strip()
+                participant.strip()
+                for participant in raw_participants.split(",")
+                if participant.strip()
             ]
 
             expenses.append(
@@ -574,7 +394,7 @@ def load_expenses():
     except Exception as error:
 
         st.error(
-            f"Errore durante la lettura: {error}"
+            f"Errore durante la lettura del Google Sheet: {error}"
         )
 
         return []
@@ -629,8 +449,8 @@ def calculate_balances(expenses):
 
     balances = defaultdict(float)
 
+    # Inizializza tutti i membri
     for member in MEMBERS:
-
         balances[member] = 0.0
 
     for expense in expenses:
@@ -644,10 +464,11 @@ def calculate_balances(expenses):
 
         share = amount / len(participants)
 
+        # Chi ha pagato ha anticipato tutto
         balances[payer] += amount
 
+        # Ogni partecipante deve la propria quota
         for participant in participants:
-
             balances[participant] -= share
 
     return balances
@@ -655,9 +476,7 @@ def calculate_balances(expenses):
 
 def calculate_settlements(expenses):
 
-    balances = calculate_balances(
-        expenses
-    )
+    balances = calculate_balances(expenses)
 
     debtors = [
         [person, -balance]
@@ -672,28 +491,31 @@ def calculate_settlements(expenses):
     ]
 
     debtors.sort(
-        key=lambda x: x[1],
+        key=lambda item: item[1],
         reverse=True,
     )
 
     creditors.sort(
-        key=lambda x: x[1],
+        key=lambda item: item[1],
         reverse=True,
     )
 
     settlements = []
 
-    i = 0
-    j = 0
+    debtor_index = 0
+    creditor_index = 0
 
     while (
-        i < len(debtors)
-        and j < len(creditors)
+        debtor_index < len(debtors)
+        and creditor_index < len(creditors)
     ):
 
+        debtor = debtors[debtor_index]
+        creditor = creditors[creditor_index]
+
         amount = min(
-            debtors[i][1],
-            creditors[j][1],
+            debtor[1],
+            creditor[1],
         )
 
         amount = round(
@@ -705,22 +527,20 @@ def calculate_settlements(expenses):
 
             settlements.append(
                 {
-                    "from": debtors[i][0],
-                    "to": creditors[j][0],
+                    "from": debtor[0],
+                    "to": creditor[0],
                     "amount": amount,
                 }
             )
 
-        debtors[i][1] -= amount
-        creditors[j][1] -= amount
+        debtor[1] -= amount
+        creditor[1] -= amount
 
-        if debtors[i][1] < 0.009:
+        if debtor[1] < 0.009:
+            debtor_index += 1
 
-            i += 1
-
-        if creditors[j][1] < 0.009:
-
-            j += 1
+        if creditor[1] < 0.009:
+            creditor_index += 1
 
     return settlements, balances
 
@@ -730,7 +550,6 @@ def calculate_personal_shares(expenses):
     shares = defaultdict(float)
 
     for member in MEMBERS:
-
         shares[member] = 0.0
 
     for expense in expenses:
@@ -744,7 +563,6 @@ def calculate_personal_shares(expenses):
         share = amount / len(participants)
 
         for participant in participants:
-
             shares[participant] += share
 
     return shares
@@ -755,11 +573,9 @@ def calculate_payer_totals(expenses):
     totals = defaultdict(float)
 
     for member in MEMBERS:
-
         totals[member] = 0.0
 
     for expense in expenses:
-
         totals[expense["payer"]] += expense["amount"]
 
     return totals
@@ -770,12 +586,11 @@ def calculate_payer_totals(expenses):
 # ============================================================
 
 if "is_admin" not in st.session_state:
-
     st.session_state.is_admin = False
 
 
 # ============================================================
-# DIALOG ELIMINAZIONE
+# DIALOG: ELIMINA SPESA
 # ============================================================
 
 @st.dialog("Elimina spesa")
@@ -790,8 +605,9 @@ def delete_dialog(expense):
         f"{format_date(expense['date'])}"
     )
 
-    st.markdown(
-        f"## {euro(expense['amount'])}"
+    st.metric(
+        "Importo",
+        euro(expense["amount"]),
     )
 
     st.warning(
@@ -819,7 +635,7 @@ def delete_dialog(expense):
             except Exception as error:
 
                 st.error(
-                    str(error)
+                    f"Errore: {error}"
                 )
 
     with col2:
@@ -833,7 +649,7 @@ def delete_dialog(expense):
 
 
 # ============================================================
-# DIALOG SVUOTA TUTTO
+# DIALOG: ELIMINA TUTTO
 # ============================================================
 
 @st.dialog("⚠️ Svuota tutte le spese")
@@ -846,13 +662,21 @@ def clear_all_dialog(
         "Stai per eliminare tutte le spese."
     )
 
-    st.write(
-        f"**{expense_count} spese**"
-    )
+    col1, col2 = st.columns(2)
 
-    st.write(
-        f"Totale: **{euro(total_amount)}**"
-    )
+    with col1:
+
+        st.metric(
+            "Spese",
+            expense_count,
+        )
+
+    with col2:
+
+        st.metric(
+            "Totale",
+            euro(total_amount),
+        )
 
     st.warning(
         "Questa operazione non può essere annullata."
@@ -877,7 +701,7 @@ def clear_all_dialog(
             except Exception as error:
 
                 st.error(
-                    str(error)
+                    f"Errore: {error}"
                 )
 
     with col2:
@@ -896,11 +720,11 @@ def clear_all_dialog(
 
 with st.sidebar:
 
-    st.markdown("## ⚙️ Impostazioni")
+    st.header("⚙️ Impostazioni")
 
     st.divider()
 
-    st.markdown("### 🔐 Amministratore")
+    st.subheader("🔐 Amministratore")
 
     if st.session_state.is_admin:
 
@@ -920,9 +744,9 @@ with st.sidebar:
     else:
 
         password = st.text_input(
-            "Password",
+            "Password admin",
             type="password",
-            placeholder="Password admin",
+            placeholder="Inserisci password",
         )
 
         admin_password = st.secrets.get(
@@ -946,34 +770,36 @@ with st.sidebar:
 
     st.divider()
 
-    st.caption(
-        "Gli utenti normali possono visualizzare "
-        "le spese. Solo l'amministratore può modificarle."
-    )
+    if st.session_state.is_admin:
+
+        st.caption(
+            "🔓 Puoi aggiungere, eliminare e gestire le spese."
+        )
+
+    else:
+
+        st.caption(
+            "👁️ Modalità sola lettura."
+        )
 
 
 # ============================================================
 # HEADER
 # ============================================================
 
-st.markdown(
-    '<div class="app-title">💰 Spese di Gruppo</div>',
-    unsafe_allow_html=True,
-)
+st.title("💰 Spese di Gruppo")
 
 st.markdown(
-    """
-    <div class="app-subtitle">
-        Gestisci le spese e scopri automaticamente
-        come pareggiare i conti.
-    </div>
-    """,
+    '<div class="app-subtitle">'
+    "Gestisci le spese e scopri automaticamente "
+    "come pareggiare i conti."
+    "</div>",
     unsafe_allow_html=True,
 )
 
 
 # ============================================================
-# DATI
+# CARICAMENTO DATI
 # ============================================================
 
 expenses = load_expenses()
@@ -999,20 +825,20 @@ payer_totals = calculate_payer_totals(
 
 
 # ============================================================
-# TABS
+# TABS PRINCIPALI
 # ============================================================
 
-tab_dashboard, tab_expenses, tab_add = st.tabs(
+tab_dashboard, tab_expenses, tab_new = st.tabs(
     [
-        "📊  Riepilogo",
-        "🧾  Spese",
-        "➕  Nuova spesa",
+        "📊 Riepilogo",
+        "🧾 Spese",
+        "➕ Nuova spesa",
     ]
 )
 
 
 # ============================================================
-# DASHBOARD
+# TAB 1 — RIEPILOGO
 # ============================================================
 
 with tab_dashboard:
@@ -1025,72 +851,48 @@ with tab_dashboard:
 
     with col1:
 
-        st.markdown(
-            f"""
-            <div class="kpi-card">
+        with st.container(border=True):
 
-                <div class="kpi-label">
-                    Totale speso
-                </div>
+            st.metric(
+                "Totale speso",
+                euro(total_amount),
+            )
 
-                <div class="kpi-value">
-                    {euro(total_amount)}
-                </div>
-
-                <div class="kpi-help">
-                    Tutte le spese
-                </div>
-
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
+            st.caption(
+                "Tutte le spese registrate"
+            )
 
     with col2:
 
-        st.markdown(
-            f"""
-            <div class="kpi-card">
+        with st.container(border=True):
 
-                <div class="kpi-label">
-                    Spese
-                </div>
+            st.metric(
+                "Spese",
+                expense_count,
+            )
 
-                <div class="kpi-value">
-                    {expense_count}
-                </div>
-
-                <div class="kpi-help">
-                    Registrate
-                </div>
-
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
+            st.caption(
+                "Spese registrate"
+            )
 
     with col3:
 
-        st.markdown(
-            f"""
-            <div class="kpi-card">
+        with st.container(border=True):
 
-                <div class="kpi-label">
-                    Da saldare
-                </div>
+            st.metric(
+                "Da saldare",
+                len(settlements),
+            )
 
-                <div class="kpi-value">
-                    {len(settlements)}
-                </div>
+            st.caption(
+                "Trasferimenti necessari"
+            )
 
-                <div class="kpi-help">
-                    Trasferimenti necessari
-                </div>
 
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
+    st.markdown(
+        '<div class="section-space"></div>',
+        unsafe_allow_html=True,
+    )
 
 
     # --------------------------------------------------------
@@ -1099,49 +901,22 @@ with tab_dashboard:
 
     if not expenses:
 
-        st.write("")
-
-        st.markdown(
-            """
-            <div class="empty-state">
-
-                <div class="empty-icon">
-                    💸
-                </div>
-
-                <div class="empty-title">
-                    Nessuna spesa ancora
-                </div>
-
-                <div class="empty-text">
-                    Aggiungi la prima spesa per iniziare.
-                </div>
-
-            </div>
-            """,
-            unsafe_allow_html=True,
+        st.info(
+            "💸 Non ci sono ancora spese. "
+            "Aggiungi la prima dalla scheda «Nuova spesa»."
         )
 
-
-    # --------------------------------------------------------
-    # CONGUAGLI
-    # --------------------------------------------------------
 
     else:
 
-        st.markdown(
-            '<div class="section-title">💸 Da saldare</div>',
-            unsafe_allow_html=True,
-        )
+        # ====================================================
+        # CONGUAGLI
+        # ====================================================
 
-        st.markdown(
-            """
-            <div class="section-description">
-                I trasferimenti minimi necessari per
-                pareggiare i conti.
-            </div>
-            """,
-            unsafe_allow_html=True,
+        st.header("💸 Da saldare")
+
+        st.caption(
+            "I trasferimenti minimi necessari per pareggiare i conti."
         )
 
         if not settlements:
@@ -1158,87 +933,61 @@ with tab_dashboard:
                 creditor = settlement["to"]
                 amount = settlement["amount"]
 
-                st.markdown(
-                    f"""
-                    <div class="settlement-card">
+                with st.container(border=True):
 
-                        <div style="
-                            display:grid;
-                            grid-template-columns:
-                            1fr 60px 1fr;
-                            align-items:center;
-                        ">
+                    col1, col2, col3 = st.columns(
+                        [2, 0.6, 2]
+                    )
 
-                            <div>
+                    with col1:
 
-                                <div class="
-                                    settlement-label
-                                ">
-                                    Deve pagare
-                                </div>
+                        st.caption(
+                            "DEVE PAGARE"
+                        )
 
-                                <div class="
-                                    settlement-person
-                                    debtor
-                                ">
-                                    🔴 {debtor}
-                                </div>
+                        st.markdown(
+                            f'<div class="debtor">'
+                            f"🔴 {debtor}"
+                            f"</div>",
+                            unsafe_allow_html=True,
+                        )
 
-                            </div>
+                    with col2:
 
-                            <div class="
-                                settlement-arrow
-                            ">
-                                →
-                            </div>
+                        st.markdown(
+                            '<div class="arrow">→</div>',
+                            unsafe_allow_html=True,
+                        )
 
-                            <div>
+                    with col3:
 
-                                <div class="
-                                    settlement-label
-                                ">
-                                    Riceve
-                                </div>
+                        st.caption(
+                            "RICEVE"
+                        )
 
-                                <div class="
-                                    settlement-person
-                                    creditor
-                                ">
-                                    🟢 {creditor}
-                                </div>
+                        st.markdown(
+                            f'<div class="creditor">'
+                            f"🟢 {creditor}"
+                            f"</div>",
+                            unsafe_allow_html=True,
+                        )
 
-                            </div>
-
-                        </div>
-
-                        <div class="
-                            settlement-amount
-                        ">
-                            {euro(amount)}
-                        </div>
-
-                    </div>
-                    """,
-                    unsafe_allow_html=True,
-                )
+                    st.markdown(
+                        f'<div class="settlement-amount">'
+                        f"{euro(amount)}"
+                        f"</div>",
+                        unsafe_allow_html=True,
+                    )
 
 
-        # ----------------------------------------------------
+        # ====================================================
         # SALDI
-        # ----------------------------------------------------
+        # ====================================================
 
-        st.markdown(
-            '<div class="section-title">👥 Saldi</div>',
-            unsafe_allow_html=True,
-        )
+        st.header("👥 Situazione")
 
-        st.markdown(
-            """
-            <div class="section-description">
-                Situazione individuale del gruppo.
-            </div>
-            """,
-            unsafe_allow_html=True,
+        st.caption(
+            "Quanto ha anticipato e quanto dovrebbe aver sostenuto ogni persona."
         )
 
         active_members = [
@@ -1251,78 +1000,69 @@ with tab_dashboard:
             )
         ]
 
-        for person in active_members:
+        if not active_members:
 
-            balance = balances[person]
-
-            if balance > 0.009:
-
-                balance_html = f"""
-                    <div class="balance-positive">
-                        +{euro(balance)}
-                    </div>
-                """
-
-            elif balance < -0.009:
-
-                balance_html = f"""
-                    <div class="balance-negative">
-                        {euro(balance)}
-                    </div>
-                """
-
-            else:
-
-                balance_html = f"""
-                    <div class="balance-neutral">
-                        0,00 €
-                    </div>
-                """
-
-            st.markdown(
-                f"""
-                <div class="person-card">
-
-                    <div style="
-                        display:grid;
-                        grid-template-columns:
-                        1.5fr 1.5fr 0.8fr;
-                        align-items:center;
-                    ">
-
-                        <div>
-                            <div class="person-name">
-                                {person}
-                            </div>
-                        </div>
-
-                        <div>
-                            <div class="person-meta">
-                                Pagato
-                                {euro(payer_totals[person])}
-                            </div>
-
-                            <div class="person-meta">
-                                Quota
-                                {euro(personal_shares[person])}
-                            </div>
-                        </div>
-
-                        <div>
-                            {balance_html}
-                        </div>
-
-                    </div>
-
-                </div>
-                """,
-                unsafe_allow_html=True,
+            st.info(
+                "Nessuna situazione da mostrare."
             )
 
+        else:
 
-        # ----------------------------------------------------
-        # DETTAGLIO QUOTE
-        # ----------------------------------------------------
+            for person in active_members:
+
+                balance = balances[person]
+
+                if balance > 0.009:
+
+                    status = "🟢 Riceve"
+                    status_value = f"+{euro(balance)}"
+
+                elif balance < -0.009:
+
+                    status = "🔴 Deve"
+                    status_value = euro(balance)
+
+                else:
+
+                    status = "⚪ In pari"
+                    status_value = "0,00 €"
+
+                with st.container(border=True):
+
+                    col1, col2, col3 = st.columns(
+                        [1.5, 1.5, 1]
+                    )
+
+                    with col1:
+
+                        st.markdown(
+                            f"### {person}"
+                        )
+
+                    with col2:
+
+                        st.caption(
+                            f"Pagato: {euro(payer_totals[person])}"
+                        )
+
+                        st.caption(
+                            f"Quota: {euro(personal_shares[person])}"
+                        )
+
+                    with col3:
+
+                        st.caption(
+                            status
+                        )
+
+                        st.markdown(
+                            f"**{status_value}**"
+                        )
+
+
+        # ====================================================
+        # DETTAGLIO
+        # ====================================================
 
         with st.expander(
             "📊 Dettaglio quote personali"
@@ -1342,23 +1082,51 @@ with tab_dashboard:
                 col1, col2 = st.columns(2)
 
                 with col1:
-
-                    st.write(
-                        f"**{person}**"
-                    )
+                    st.write(person)
 
                 with col2:
-
                     st.write(
                         euro(share)
                     )
 
 
+        # ====================================================
+        # TOTALE ANTICIPATO
+        # ====================================================
+
+        with st.expander(
+            "💳 Totale anticipato da ogni persona"
+        ):
+
+            sorted_payers = sorted(
+                payer_totals.items(),
+                key=lambda item: item[1],
+                reverse=True,
+            )
+
+            for person, total in sorted_payers:
+
+                if total <= 0:
+                    continue
+
+                col1, col2 = st.columns(2)
+
+                with col1:
+                    st.write(person)
+
+                with col2:
+                    st.write(
+                        euro(total)
+                    )
+
+
 # ============================================================
-# TAB SPESE
+# TAB 2 — ELENCO SPESE
 # ============================================================
 
 with tab_expenses:
+
+    st.header("🧾 Spese")
 
     if not expenses:
 
@@ -1367,10 +1135,6 @@ with tab_expenses:
         )
 
     else:
-
-        st.markdown(
-            f"## 🧾 Spese · {expense_count}"
-        )
 
         # ----------------------------------------------------
         # FILTRI
@@ -1388,7 +1152,7 @@ with tab_expenses:
         with col2:
 
             sort_order = st.selectbox(
-                "Ordina",
+                "Ordina per",
                 [
                     "Più recenti",
                     "Più vecchie",
@@ -1397,7 +1161,13 @@ with tab_expenses:
                 ],
             )
 
+
         filtered_expenses = expenses.copy()
+
+
+        # ----------------------------------------------------
+        # FILTRO PAGATORE
+        # ----------------------------------------------------
 
         if payer_filter != "Tutti":
 
@@ -1406,6 +1176,11 @@ with tab_expenses:
                 for expense in filtered_expenses
                 if expense["payer"] == payer_filter
             ]
+
+
+        # ----------------------------------------------------
+        # ORDINAMENTO
+        # ----------------------------------------------------
 
         if sort_order == "Più recenti":
 
@@ -1419,7 +1194,7 @@ with tab_expenses:
 
             filtered_expenses.sort(
                 key=lambda expense:
-                    expense["date"] or date.min,
+                    expense["date"] or date.min
             )
 
         elif sort_order == "Importo maggiore":
@@ -1434,90 +1209,70 @@ with tab_expenses:
 
             filtered_expenses.sort(
                 key=lambda expense:
-                    expense["amount"],
+                    expense["amount"]
             )
 
 
         # ----------------------------------------------------
-        # LISTA SPESE
+        # RISULTATO FILTRO
         # ----------------------------------------------------
 
-        st.write("")
+        st.caption(
+            f"{len(filtered_expenses)} "
+            f"spese visualizzate"
+        )
+
+
+        # ----------------------------------------------------
+        # LISTA
+        # ----------------------------------------------------
 
         for expense in filtered_expenses:
 
-            col_info, col_amount, col_action = st.columns(
-                [5, 1.5, 0.6]
-            )
+            with st.container(border=True):
 
-            with col_info:
-
-                participants = ", ".join(
-                    expense["participants"]
+                col1, col2, col3 = st.columns(
+                    [4, 1.3, 0.6]
                 )
 
-                st.markdown(
-                    f"""
-                    <div class="expense-card">
+                with col1:
 
-                        <div class="
-                            expense-title
-                        ">
-                            {expense["description"]}
-                        </div>
+                    st.markdown(
+                        f"**{expense['description']}**"
+                    )
 
-                        <div class="
-                            expense-meta
-                        ">
-                            👤 {expense["payer"]}
-                            &nbsp; · &nbsp;
-                            📅 {format_date(expense["date"])}
-                        </div>
+                    participants = ", ".join(
+                        expense["participants"]
+                    )
 
-                        <div class="
-                            expense-meta
-                        ">
-                            👥 {participants}
-                        </div>
+                    st.caption(
+                        f"👤 {expense['payer']} · "
+                        f"📅 {format_date(expense['date'])}"
+                    )
 
-                    </div>
-                    """,
-                    unsafe_allow_html=True,
-                )
+                    st.caption(
+                        f"👥 {participants}"
+                    )
 
-            with col_amount:
+                with col2:
 
-                st.markdown(
-                    f"""
-                    <div style="
-                        padding-top:1rem;
-                        text-align:right;
-                    ">
+                    st.markdown(
+                        f"**{euro(expense['amount'])}**"
+                    )
 
-                        <div class="
-                            expense-amount
-                        ">
-                            {euro(expense["amount"])}
-                        </div>
+                with col3:
 
-                    </div>
-                    """,
-                    unsafe_allow_html=True,
-                )
+                    if st.session_state.is_admin:
 
-            with col_action:
+                        if st.button(
+                            "🗑️",
+                            key=f"delete_{expense['row_idx']}",
+                            help="Elimina spesa",
+                        ):
 
-                if st.session_state.is_admin:
-
-                    if st.button(
-                        "🗑️",
-                        key=f"delete_{expense['row_idx']}",
-                        help="Elimina",
-                    ):
-
-                        delete_dialog(
-                            expense
-                        )
+                            delete_dialog(
+                                expense
+                            )
 
 
         # ----------------------------------------------------
@@ -1539,8 +1294,9 @@ with tab_expenses:
                 "Spese visualizzate"
             )
 
-            st.markdown(
-                f"**{len(filtered_expenses)}**"
+            st.metric(
+                "Numero",
+                len(filtered_expenses),
             )
 
         with col2:
@@ -1549,13 +1305,14 @@ with tab_expenses:
                 "Totale visualizzato"
             )
 
-            st.markdown(
-                f"**{euro(filtered_total)}**"
+            st.metric(
+                "Totale",
+                euro(filtered_total),
             )
 
 
         # ----------------------------------------------------
-        # GESTIONE DATI
+        # GESTIONE ADMIN
         # ----------------------------------------------------
 
         if st.session_state.is_admin:
@@ -1583,44 +1340,31 @@ with tab_expenses:
 
 
 # ============================================================
-# TAB NUOVA SPESA
+# TAB 3 — NUOVA SPESA
 # ============================================================
 
-with tab_add:
+with tab_new:
 
     if not st.session_state.is_admin:
 
-        st.markdown(
-            """
-            <div class="empty-state">
+        st.header("🔐 Nuova spesa")
 
-                <div class="empty-icon">
-                    🔐
-                </div>
-
-                <div class="empty-title">
-                    Accesso amministratore richiesto
-                </div>
-
-                <div class="empty-text">
-                    Accedi dalle impostazioni per
-                    aggiungere o modificare le spese.
-                </div>
-
-            </div>
-            """,
-            unsafe_allow_html=True,
+        st.info(
+            "Accedi come amministratore dalla sidebar "
+            "per poter aggiungere una spesa."
         )
 
     else:
 
-        st.markdown(
-            "## ➕ Nuova spesa"
-        )
+        st.header("➕ Nuova spesa")
 
         st.caption(
-            "Inserisci la spesa e seleziona le persone coinvolte."
+            "Inserisci i dettagli della spesa."
         )
+
+        # ----------------------------------------------------
+        # FORM
+        # ----------------------------------------------------
 
         with st.form(
             "new_expense_form",
@@ -1653,7 +1397,9 @@ with tab_add:
 
             description = st.text_input(
                 "📝 Cosa?",
-                placeholder="Cena, benzina, supermercato...",
+                placeholder=(
+                    "Cena, benzina, supermercato..."
+                ),
             )
 
 
@@ -1670,19 +1416,19 @@ with tab_add:
             )
 
 
-            st.write("")
+            st.divider()
 
 
             # ------------------------------------------------
             # PARTECIPANTI
             # ------------------------------------------------
 
-            st.markdown(
-                "**👥 Partecipanti**"
+            st.subheader(
+                "👥 Chi partecipa?"
             )
 
             selection_mode = st.radio(
-                "Chi deve dividere la spesa?",
+                "Modalità",
                 [
                     "Tutti",
                     "Seleziona manualmente",
@@ -1691,16 +1437,19 @@ with tab_add:
                 label_visibility="collapsed",
             )
 
+
             if selection_mode == "Tutti":
 
-                selected_participants = MEMBERS
+                selected_participants = MEMBERS.copy()
 
             else:
 
                 selected_participants = st.multiselect(
-                    "Seleziona partecipanti",
+                    "Partecipanti",
                     MEMBERS,
-                    placeholder="Scegli le persone...",
+                    placeholder=(
+                        "Seleziona le persone coinvolte..."
+                    ),
                 )
 
 
@@ -1718,7 +1467,8 @@ with tab_add:
                 st.info(
                     f"💡 {euro(per_person)} "
                     f"per persona · "
-                    f"{len(selected_participants)} partecipanti"
+                    f"{len(selected_participants)} "
+                    f"partecipanti"
                 )
 
             else:
@@ -1732,7 +1482,7 @@ with tab_add:
 
 
             # ------------------------------------------------
-            # SALVA
+            # SUBMIT
             # ------------------------------------------------
 
             submitted = st.form_submit_button(
@@ -1741,46 +1491,51 @@ with tab_add:
                 use_container_width=True,
             )
 
-            if submitted:
 
-                if not description.strip():
+        # ----------------------------------------------------
+        # GESTIONE SUBMIT
+        # ----------------------------------------------------
 
-                    st.error(
-                        "Inserisci una descrizione."
+        if submitted:
+
+            if not description.strip():
+
+                st.error(
+                    "Inserisci una descrizione."
+                )
+
+            elif amount <= 0:
+
+                st.error(
+                    "L'importo deve essere maggiore di zero."
+                )
+
+            elif not selected_participants:
+
+                st.error(
+                    "Seleziona almeno un partecipante."
+                )
+
+            else:
+
+                try:
+
+                    save_expense(
+                        expense_date=expense_date,
+                        payer=payer,
+                        description=description.strip(),
+                        amount=amount,
+                        participants=selected_participants,
                     )
 
-                elif amount <= 0:
-
-                    st.error(
-                        "L'importo deve essere maggiore di zero."
+                    st.success(
+                        f"Spesa di {euro(amount)} salvata! 🎉"
                     )
 
-                elif not selected_participants:
+                    st.rerun()
+
+                except Exception as error:
 
                     st.error(
-                        "Seleziona almeno un partecipante."
+                        f"Errore durante il salvataggio: {error}"
                     )
-
-                else:
-
-                    try:
-
-                        save_expense(
-                            expense_date,
-                            payer,
-                            description.strip(),
-                            amount,
-                            selected_participants,
-                        )
-
-                        st.success(
-                            f"Spesa di {euro(amount)} salvata! 🎉"
-                        )
-
-                        st.rerun()
-
-                    except Exception as error:
-
-                        st.error(
-                            f"Errore durante il salvataggio: {error}"
-                        )
