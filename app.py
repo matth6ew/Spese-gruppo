@@ -184,9 +184,9 @@ st.markdown(
     }
 
     .settlement-amount {
-        font-size: 0.85rem;
-        font-weight: 700;
-        color: #a7adb7;
+        font-size: 1.15rem;
+        font-weight: 850;
+        color: #f4f5f7;
         margin-bottom: 2px;
     }
 
@@ -555,7 +555,7 @@ def clear_all_dialog(expense_count, total_amount):
     with col2:
         st.metric("Totale", euro(total_amount))
     
-    st.warning("Cette operazione non può essere annullata.")
+    st.warning("Questa operazione non può essere annullata.")
 
     col1, col2 = st.columns(2)
     with col1:
