@@ -157,7 +157,6 @@ st.markdown(
         font-weight: 650;
     }
 
-    /* Ottimizzazioni specifiche per dispositivi mobili */
     @media (max-width: 640px) {
         .summary-grid {
             grid-template-columns: 1fr;
@@ -617,17 +616,15 @@ with tab_dashboard:
         else:
             for s in settlements:
                 with st.container(border=True):
-                    cols = st.columns([2, 0.5, 2, 1.5])
+                    # Struttura ottimizzata e fluida per adattarsi perfettamente anche agli schermi piccoli
+                    cols = st.columns([3, 1])
                     with cols[0]:
                         st.caption("DEVE PAGARE")
                         st.markdown(f"🔴 **{s['from']}**")
-                    with cols[1]:
-                        st.markdown("<div style='text-align: center; font-size: 1.1rem; padding-top: 8px;'>→</div>", unsafe_allow_html=True)
-                    with cols[2]:
-                        st.caption("RICEVE")
+                        st.markdown("<div style='font-size: 0.85rem; color: #8f96a1; margin: 4px 0;'>↓ riceve</div>", unsafe_allow_html=True)
                         st.markdown(f"🟢 **{s['to']}**")
-                    with cols[3]:
-                        st.markdown(f"<div style='text-align: right; font-size: 1.1rem; font-weight: 800; padding-top: 8px;'>{euro(s['amount'])}</div>", unsafe_allow_html=True)
+                    with cols[1]:
+                        st.markdown(f"<div style='text-align: right; padding-top: 15px;'><span style='font-size: 1.1rem; font-weight: 850;'>{euro(s['amount'])}</span></div>", unsafe_allow_html=True)
 
         st.markdown(
             """
