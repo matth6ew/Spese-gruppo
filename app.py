@@ -54,9 +54,6 @@ HEADERS = [
 st.markdown(
     """
     <style>
-    /* =========================================================
-       APP SHELL
-       ========================================================= */
     .block-container {
         max-width: 1120px;
         padding-top: 2.2rem;
@@ -102,9 +99,6 @@ st.markdown(
         line-height: 1.55;
     }
 
-    /* =========================================================
-       SUMMARY
-       ========================================================= */
     .summary-grid {
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -117,8 +111,7 @@ st.markdown(
         padding: 1.15rem 1.2rem;
         border: 1px solid rgba(255,255,255,.09);
         border-radius: 18px;
-        background:
-            linear-gradient(145deg, rgba(255,255,255,.055), rgba(255,255,255,.018));
+        background: linear-gradient(145deg, rgba(255,255,255,.055), rgba(255,255,255,.018));
         box-shadow: 0 10px 30px rgba(0,0,0,.12);
     }
 
@@ -145,9 +138,6 @@ st.markdown(
         font-size: .78rem;
     }
 
-    /* =========================================================
-       SETTLEMENTS
-       ========================================================= */
     .section-heading {
         margin: 2.1rem 0 .95rem;
     }
@@ -179,13 +169,6 @@ st.markdown(
         border: 1px solid rgba(255,255,255,.085);
         border-radius: 16px;
         background: rgba(255,255,255,.025);
-        transition: transform .15s ease, border-color .15s ease, background .15s ease;
-    }
-
-    .settlement-card:hover {
-        transform: translateY(-1px);
-        border-color: rgba(255,255,255,.15);
-        background: rgba(255,255,255,.04);
     }
 
     .settlement-label {
@@ -257,9 +240,6 @@ st.markdown(
         font-weight: 650;
     }
 
-    /* =========================================================
-       BALANCES
-       ========================================================= */
     .balance-grid {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -306,49 +286,6 @@ st.markdown(
     .balance-value.positive { color: #83cf4d; }
     .balance-value.negative { color: #ff6666; }
     .balance-value.neutral { color: #b2b7bf; }
-
-    /* =========================================================
-       EXPENSE LIST
-       ========================================================= */
-    .expense-row {
-        border-radius: 15px;
-    }
-
-    @media (max-width: 760px) {
-        .block-container {
-            padding-left: 1rem;
-            padding-right: 1rem;
-            padding-top: 1.1rem;
-        }
-
-        .summary-grid,
-        .balance-grid {
-            grid-template-columns: 1fr;
-        }
-
-        .settlement-card {
-            grid-template-columns: minmax(0, 1fr) auto;
-        }
-
-        .settlement-arrow {
-            display: none;
-        }
-
-        .settlement-amount {
-            grid-column: 2;
-            grid-row: 1 / span 2;
-            min-width: auto;
-        }
-
-        .settlement-card > :nth-child(3) {
-            grid-column: 1;
-        }
-
-        .settlement-card > :nth-child(4) {
-            grid-column: 2;
-            grid-row: 2;
-        }
-    }
     </style>
     """,
     unsafe_allow_html=True,
@@ -364,7 +301,6 @@ def euro(value):
         value = float(value)
     except (TypeError, ValueError):
         value = 0.0
-
     return (
         f"{value:,.2f}"
         .replace(",", "X")
@@ -377,15 +313,11 @@ def euro(value):
 def parse_amount(value):
     if value is None or value == "":
         return 0.0
-
     if isinstance(value, (int, float)):
         return float(value)
-
     value = str(value).strip().replace("€", "").replace(" ", "")
-
     if "," in value:
         value = value.replace(".", "").replace(",", ".")
-
     try:
         return float(value)
     except ValueError:
@@ -395,17 +327,14 @@ def parse_amount(value):
 def parse_date(value):
     if not value:
         return None
-
     if isinstance(value, date):
         return value
-
     value = str(value).strip()
     for fmt in ["%Y-%m-%d", "%d/%m/%Y", "%d-%m-%Y"]:
         try:
             return datetime.strptime(value, fmt).date()
         except ValueError:
             pass
-
     return None
 
 
@@ -500,7 +429,6 @@ def save_expense(expense_date, payer, description, amount, participants):
 
 
 def update_expense(row_idx, expense_date, payer, description, amount, participants):
-    # Aggiorna la riga specifica nel Google Sheet (le righe partono da 1, row_idx include l'intestazione)
     sheet.update(
         range_name=f"A{row_idx}:E{row_idx}",
         values=[
@@ -608,21 +536,15 @@ def edit_dialog(expense):
     st.subheader(f"Modifica: {expense['description']}")
 
     with st.form(f"edit_form_{expense['row_idx']}"):
-        # Data
         default_date = expense["date"] if expense["date"] else date.today()
         new_date = st.date_input("📅 Data", value=default_date)
 
-        # Pagatore
         default_payer_idx = MEMBERS.index(expense["payer"]) if expense["payer"] in MEMBERS else 0
         new_payer = st.selectbox("👤 Chi ha pagato?", MEMBERS, index=default_payer_idx)
 
-        # Descrizione
         new_desc = st.text_input("📝 Descrizione", value=expense["description"])
-
-        # Importo
         new_amount = st.number_input("💶 Importo", min_value=0.01, value=float(expense["amount"]), step=0.50, format="%.2f")
 
-        # Partecipanti
         valid_default_parts = [p for p in expense["participants"] if p in MEMBERS]
         new_participants = st.multiselect("👥 Partecipanti", MEMBERS, default=valid_default_parts)
 
@@ -771,7 +693,6 @@ tab_dashboard, tab_expenses, tab_new = st.tabs(["📊 Riepilogo", "🧾 Spese", 
 # ============================================================
 
 with tab_dashboard:
-    # KPI principali: HTML custom per evitare card Streamlit troppo alte e disallineate.
     st.markdown(
         f"""
         <div class="summary-grid">
@@ -920,7 +841,6 @@ with tab_expenses:
 
         for expense in filtered:
             with st.container(border=True):
-                # Colonne leggermente modificate per fare spazio ai due bottoni admin (modifica ed elimina)
                 cols_layout = [4, 1.3, 0.5, 0.5] if st.session_state.is_admin else [4, 1.3]
                 cols = st.columns(cols_layout)
 
