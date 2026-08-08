@@ -199,6 +199,32 @@ if expenses:
 
     st.write("---")
 
+    # 2.5 --- QUOTA EFFETTIVA CONSUMATA PER PERSONA ---
+    st.subheader("🛒 Quota effettiva di spesa per persona")
+    
+    personal_shares = defaultdict(float)
+    
+    for exp in expenses:
+        participants = exp["participants"]
+        amount = exp["amount"]
+        
+        if participants:
+            split_amount = amount / len(participants)
+            for p in participants:
+                personal_shares[p] += split_amount
+                
+    if personal_shares:
+        # Ordiniamo in modo decrescente (da chi ha speso di più a chi meno)
+        sorted_shares = sorted(personal_shares.items(), key=lambda x: x[1], reverse=True)
+        
+        # Creiamo un layout a colonne per una visualizzazione più pulita
+        cols = st.columns(2)
+        for idx, (person, share) in enumerate(sorted_shares):
+            with cols[idx % 2]:
+                st.metric(label=person, value=f"{share:.2f} €")
+
+    st.write("---")
+
     # 3. --- LISTONA COMPLETA ---
     st.subheader(f"📋 Elenco di tutte le spese ({len(expenses)})")
 
