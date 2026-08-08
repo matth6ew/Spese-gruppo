@@ -1,5 +1,6 @@
 from collections import defaultdict
 from datetime import date, datetime
+from html import escape
 
 import gspread
 import streamlit as st
@@ -53,51 +54,299 @@ HEADERS = [
 st.markdown(
     """
     <style>
+    /* =========================================================
+       APP SHELL
+       ========================================================= */
     .block-container {
-        max-width: 1050px;
-        padding-top: 2rem;
-        padding-bottom: 4rem;
+        max-width: 1120px;
+        padding-top: 2.2rem;
+        padding-bottom: 5rem;
     }
 
-    .app-subtitle {
-        opacity: 0.65;
-        margin-top: -0.5rem;
-        margin-bottom: 1.5rem;
+    [data-testid="stHeader"] {
+        background: transparent;
     }
 
-    .section-space {
-        height: 0.7rem;
+    .app-hero {
+        margin: 0 0 2rem;
+    }
+
+    .app-hero-kicker {
+        display: inline-flex;
+        align-items: center;
+        gap: .45rem;
+        padding: .38rem .72rem;
+        border: 1px solid rgba(255,255,255,.10);
+        border-radius: 999px;
+        background: rgba(255,255,255,.035);
+        color: #a7adb7;
+        font-size: .78rem;
+        font-weight: 700;
+        letter-spacing: .03em;
+        text-transform: uppercase;
+    }
+
+    .app-hero h1 {
+        margin: .75rem 0 .35rem;
+        font-size: clamp(2rem, 4vw, 2.9rem);
+        line-height: 1.05;
+        letter-spacing: -.045em;
+        color: #f4f5f7;
+    }
+
+    .app-hero p {
+        margin: 0;
+        max-width: 680px;
+        color: #8f96a1;
+        font-size: 1rem;
+        line-height: 1.55;
+    }
+
+    /* =========================================================
+       SUMMARY
+       ========================================================= */
+    .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: .9rem;
+        margin-bottom: 2rem;
+    }
+
+    .summary-card {
+        min-height: 112px;
+        padding: 1.15rem 1.2rem;
+        border: 1px solid rgba(255,255,255,.09);
+        border-radius: 18px;
+        background:
+            linear-gradient(145deg, rgba(255,255,255,.055), rgba(255,255,255,.018));
+        box-shadow: 0 10px 30px rgba(0,0,0,.12);
+    }
+
+    .summary-label {
+        color: #8e95a0;
+        font-size: .78rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .055em;
+    }
+
+    .summary-value {
+        margin-top: .35rem;
+        color: #f3f4f6;
+        font-size: 1.65rem;
+        line-height: 1.15;
+        font-weight: 800;
+        letter-spacing: -.03em;
+    }
+
+    .summary-help {
+        margin-top: .28rem;
+        color: #6f7783;
+        font-size: .78rem;
+    }
+
+    /* =========================================================
+       SETTLEMENTS
+       ========================================================= */
+    .section-heading {
+        margin: 2.1rem 0 .95rem;
+    }
+
+    .section-heading h2 {
+        margin: 0;
+        color: #f1f2f4;
+        font-size: 1.35rem;
+        letter-spacing: -.025em;
+    }
+
+    .section-heading p {
+        margin: .25rem 0 0;
+        color: #7f8793;
+        font-size: .9rem;
+    }
+
+    .settlement-list {
+        display: grid;
+        gap: .72rem;
+    }
+
+    .settlement-card {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem 1.15rem;
+        border: 1px solid rgba(255,255,255,.085);
+        border-radius: 16px;
+        background: rgba(255,255,255,.025);
+        transition: transform .15s ease, border-color .15s ease, background .15s ease;
+    }
+
+    .settlement-card:hover {
+        transform: translateY(-1px);
+        border-color: rgba(255,255,255,.15);
+        background: rgba(255,255,255,.04);
+    }
+
+    .settlement-label {
+        margin-bottom: .18rem;
+        color: #737b87;
+        font-size: .67rem;
+        font-weight: 800;
+        letter-spacing: .075em;
+        text-transform: uppercase;
+    }
+
+    .person-name {
+        color: #f1f3f5;
+        font-size: 1rem;
+        font-weight: 750;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .person-name.debtor::before,
+    .person-name.creditor::before {
+        content: "";
+        display: inline-block;
+        width: .58rem;
+        height: .58rem;
+        margin: 0 .5rem .05rem 0;
+        border-radius: 50%;
+        vertical-align: middle;
+    }
+
+    .person-name.debtor::before {
+        background: #ff4b4b;
+        box-shadow: 0 0 0 4px rgba(255,75,75,.10);
+    }
+
+    .person-name.creditor::before {
+        background: #7bc043;
+        box-shadow: 0 0 0 4px rgba(123,192,67,.10);
+    }
+
+    .settlement-arrow {
+        width: 2rem;
+        height: 2rem;
+        display: grid;
+        place-items: center;
+        border: 1px solid rgba(255,255,255,.08);
+        border-radius: 50%;
+        color: #9ba2ad;
+        background: rgba(255,255,255,.025);
+        font-size: 1rem;
     }
 
     .settlement-amount {
-        font-size: 1.35rem;
+        min-width: 118px;
+        color: #f7f8fa;
+        font-size: 1.15rem;
+        font-weight: 850;
+        text-align: right;
+        letter-spacing: -.02em;
+    }
+
+    .empty-success {
+        padding: 1rem 1.15rem;
+        border: 1px solid rgba(123,192,67,.18);
+        border-radius: 15px;
+        background: rgba(123,192,67,.055);
+        color: #a9d982;
+        font-weight: 650;
+    }
+
+    /* =========================================================
+       BALANCES
+       ========================================================= */
+    .balance-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: .72rem;
+    }
+
+    .balance-card {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 1rem;
+        align-items: center;
+        padding: .95rem 1.05rem;
+        border: 1px solid rgba(255,255,255,.075);
+        border-radius: 15px;
+        background: rgba(255,255,255,.022);
+    }
+
+    .balance-person {
+        color: #f0f2f5;
+        font-weight: 750;
+    }
+
+    .balance-meta {
+        margin-top: .25rem;
+        color: #727a86;
+        font-size: .76rem;
+    }
+
+    .balance-status {
+        text-align: right;
+        font-size: .72rem;
+        font-weight: 700;
+        color: #8f97a2;
+    }
+
+    .balance-value {
+        margin-top: .18rem;
+        color: #f4f5f7;
+        font-size: 1rem;
         font-weight: 800;
-        text-align: center;
-        margin-top: 0.3rem;
+        text-align: right;
     }
 
-    .debtor {
-        color: #ff4b4b;
-        font-weight: 700;
+    .balance-value.positive { color: #83cf4d; }
+    .balance-value.negative { color: #ff6666; }
+    .balance-value.neutral { color: #b2b7bf; }
+
+    /* =========================================================
+       EXPENSE LIST
+       ========================================================= */
+    .expense-row {
+        border-radius: 15px;
     }
 
-    .creditor {
-        color: #09ab3b;
-        font-weight: 700;
-    }
-
-    .arrow {
-        text-align: center;
-        font-size: 1.5rem;
-        opacity: 0.55;
-        padding-top: 0.7rem;
-    }
-
-    @media (max-width: 700px) {
+    @media (max-width: 760px) {
         .block-container {
             padding-left: 1rem;
             padding-right: 1rem;
-            padding-top: 1rem;
+            padding-top: 1.1rem;
+        }
+
+        .summary-grid,
+        .balance-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .settlement-card {
+            grid-template-columns: minmax(0, 1fr) auto;
+        }
+
+        .settlement-arrow {
+            display: none;
+        }
+
+        .settlement-amount {
+            grid-column: 2;
+            grid-row: 1 / span 2;
+            min-width: auto;
+        }
+
+        .settlement-card > :nth-child(3) {
+            grid-column: 1;
+        }
+
+        .settlement-card > :nth-child(4) {
+            grid-column: 2;
+            grid-row: 2;
         }
     }
     </style>
@@ -486,9 +735,14 @@ with st.sidebar:
 # HEADER PRINCIPALE
 # ============================================================
 
-st.title("💰 Spese di Gruppo")
 st.markdown(
-    '<div class="app-subtitle">Gestisci le spese e scopri automaticamente come pareggiare i conti.</div>',
+    """
+    <div class="app-hero">
+        <div class="app-hero-kicker">💰 Spese condivise</div>
+        <h1>Spese di Gruppo</h1>
+        <p>Registra le spese, controlla chi ha anticipato e scopri in un attimo i trasferimenti minimi per chiudere i conti.</p>
+    </div>
+    """,
     unsafe_allow_html=True,
 )
 
@@ -517,73 +771,120 @@ tab_dashboard, tab_expenses, tab_new = st.tabs(["📊 Riepilogo", "🧾 Spese", 
 # ============================================================
 
 with tab_dashboard:
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        with st.container(border=True):
-            st.metric("Totale speso", euro(total_amount))
-            st.caption("Tutte le spese registrate")
-    with col2:
-        with st.container(border=True):
-            st.metric("Spese", expense_count)
-            st.caption("Spese registrate")
-    with col3:
-        with st.container(border=True):
-            st.metric("Da saldare", len(settlements))
-            st.caption("Trasferimenti necessari")
-
-    st.markdown('<div class="section-space"></div>', unsafe_allow_html=True)
+    # KPI principali: HTML custom per evitare card Streamlit troppo alte e disallineate.
+    st.markdown(
+        f"""
+        <div class="summary-grid">
+            <div class="summary-card">
+                <div class="summary-label">Totale speso</div>
+                <div class="summary-value">{escape(euro(total_amount))}</div>
+                <div class="summary-help">Tutte le spese registrate</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-label">Spese</div>
+                <div class="summary-value">{expense_count}</div>
+                <div class="summary-help">Movimenti registrati</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-label">Da saldare</div>
+                <div class="summary-value">{len(settlements)}</div>
+                <div class="summary-help">Trasferimenti necessari</div>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
     if not expenses:
         st.info("💸 Non ci sono ancora spese. Aggiungi la prima dalla scheda «Nuova spesa».")
     else:
-        st.header("💸 Da saldare")
-        st.caption("I trasferimenti minimi necessari per pareggiare i conti.")
+        st.markdown(
+            """
+            <div class="section-heading">
+                <h2>Da saldare</h2>
+                <p>Il percorso più semplice per pareggiare i conti con il minor numero di trasferimenti.</p>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
 
         if not settlements:
-            st.success("🎉 Tutti i conti sono perfettamente in pari!")
+            st.markdown(
+                '<div class="empty-success">✓ Tutti i conti sono perfettamente in pari.</div>',
+                unsafe_allow_html=True,
+            )
         else:
+            settlement_html = ['<div class="settlement-list">']
             for s in settlements:
-                with st.container(border=True):
-                    col1, col2, col3 = st.columns([2, 0.6, 2])
-                    with col1:
-                        st.caption("DEVE PAGARE")
-                        st.markdown(f'<div class="debtor">🔴 {s["from"]}</div>', unsafe_allow_html=True)
-                    with col2:
-                        st.markdown('<div class="arrow">→</div>', unsafe_allow_html=True)
-                    with col3:
-                        st.caption("RICEVE")
-                        st.markdown(f'<div class="creditor">🟢 {s["to"]}</div>', unsafe_allow_html=True)
-                    
-                    st.markdown(f'<div class="settlement-amount">{euro(s["amount"])}</div>', unsafe_allow_html=True)
+                settlement_html.append(
+                    f"""
+                    <div class="settlement-card">
+                        <div>
+                            <div class="settlement-label">Deve pagare</div>
+                            <div class="person-name debtor">{escape(s["from"])}</div>
+                        </div>
+                        <div class="settlement-arrow">→</div>
+                        <div>
+                            <div class="settlement-label">Riceve</div>
+                            <div class="person-name creditor">{escape(s["to"])}</div>
+                        </div>
+                        <div class="settlement-amount">{escape(euro(s["amount"]))}</div>
+                    </div>
+                    """
+                )
+            settlement_html.append("</div>")
+            st.markdown("".join(settlement_html), unsafe_allow_html=True)
 
-        st.markdown('<div class="section-space"></div>', unsafe_allow_html=True)
-        st.header("👥 Situazione")
-        st.caption("Quanto ha anticipato e quanto dovrebbe aver sostenuto ogni persona.")
+        st.markdown(
+            """
+            <div class="section-heading">
+                <h2>Situazione</h2>
+                <p>Quanto ha anticipato e qual è il saldo netto di ogni persona.</p>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
 
-        active_members = [m for m in MEMBERS if abs(balances[m]) > 0.009 or payer_totals[m] > 0 or personal_shares[m] > 0]
+        active_members = [
+            m for m in MEMBERS
+            if abs(balances[m]) > 0.009 or payer_totals[m] > 0 or personal_shares[m] > 0
+        ]
 
         if not active_members:
             st.info("Nessuna situazione da mostrare.")
         else:
+            balance_html = ['<div class="balance-grid">']
             for person in active_members:
                 balance = balances[person]
                 if balance > 0.009:
-                    status, status_val = "🟢 Riceve", f"+{euro(balance)}"
+                    status = "Riceve"
+                    status_val = f"+{euro(balance)}"
+                    value_class = "positive"
                 elif balance < -0.009:
-                    status, status_val = "🔴 Deve", euro(balance)
+                    status = "Deve"
+                    status_val = euro(balance)
+                    value_class = "negative"
                 else:
-                    status, status_val = "⚪ In pari", "0,00 €"
+                    status = "In pari"
+                    status_val = "0,00 €"
+                    value_class = "neutral"
 
-                with st.container(border=True):
-                    c1, c2, c3 = st.columns([1.5, 1.5, 1])
-                    with c1:
-                        st.markdown(f"### {person}")
-                    with c2:
-                        st.caption(f"Pagato: {euro(payer_totals[person])}")
-                        st.caption(f"Quota: {euro(personal_shares[person])}")
-                    with c3:
-                        st.caption(status)
-                        st.markdown(f"**{status_val}**")
+                balance_html.append(
+                    f"""
+                    <div class="balance-card">
+                        <div>
+                            <div class="balance-person">{escape(person)}</div>
+                            <div class="balance-meta">Pagato {escape(euro(payer_totals[person]))} · Quota {escape(euro(personal_shares[person]))}</div>
+                        </div>
+                        <div>
+                            <div class="balance-status">{status}</div>
+                            <div class="balance-value {value_class}">{escape(status_val)}</div>
+                        </div>
+                    </div>
+                    """
+                )
+            balance_html.append("</div>")
+            st.markdown("".join(balance_html), unsafe_allow_html=True)
 
 
 # ============================================================
