@@ -47,7 +47,7 @@ HEADERS = [
 
 
 # ============================================================
-# CSS UI/UX AGGIORNATO
+# CSS UI/UX ALLINEATO
 # ============================================================
 
 st.markdown(
@@ -70,9 +70,16 @@ st.markdown(
         height: 1rem;
     }
 
-    /* Card conguaglio compatta */
+    /* Allineamento perfetto card conguagli */
+    .settlement-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.2rem 0;
+    }
+
     .settlement-amount {
-        font-size: 1.15rem;
+        font-size: 1.25rem;
         font-weight: 800;
         text-align: center;
         white-space: nowrap;
@@ -81,19 +88,13 @@ st.markdown(
     .debtor {
         color: #ff4b4b;
         font-weight: 700;
-        font-size: 1.05rem;
+        font-size: 1.1rem;
     }
 
     .creditor {
         color: #09ab3b;
         font-weight: 700;
-        font-size: 1.05rem;
-    }
-
-    .transfer-arrow {
-        text-align: center;
-        font-size: 1.2rem;
-        opacity: 0.5;
+        font-size: 1.1rem;
     }
 
     @media (max-width: 700px) {
@@ -475,23 +476,20 @@ with tab_dashboard:
         else:
             for s in settlements:
                 with st.container(border=True):
-                    c1, c2, c3, c4 = st.columns([1.5, 0.8, 1.2, 1.5])
+                    # Struttura a 3 colonne pulita e bilanciata
+                    c1, c2, c3 = st.columns([1.5, 1.2, 1.5])
                     
                     with c1:
-                        st.caption("DEVE PAGARE")
+                        st.caption("CHI PAGA")
                         st.markdown(f'<div class="debtor">🔴 {s["from"]}</div>', unsafe_allow_html=True)
                     
                     with c2:
-                        st.caption("TRASFERISCI")
-                        st.markdown(f'<div class="transfer-arrow">➔</div>', unsafe_allow_html=True)
-                    
-                    with c3:
-                        st.caption("IMPORTO")
+                        st.caption("IMPORTO DA BONIFICARE")
                         st.markdown(f'<div class="settlement-amount">{euro(s["amount"])}</div>', unsafe_allow_html=True)
                     
-                    with c4:
+                    with c3:
                         st.caption("RICEVE")
-                        st.markdown(f'<div class="creditor">🟢 {s["to"]}</div>', unsafe_allow_html=True)
+                        st.markdown(f'<div class="creditor" style="text-align: right;">{s["to"]} 🟢</div>', unsafe_allow_html=True)
 
         st.markdown('<div class="section-space"></div>', unsafe_allow_html=True)
         st.header("👥 Situazione Personale")
