@@ -47,14 +47,14 @@ HEADERS = [
 
 
 # ============================================================
-# CSS UI/UX ALLINEATO
+# CSS MINIMALE E PULITO
 # ============================================================
 
 st.markdown(
     """
     <style>
     .block-container {
-        max-width: 1000px;
+        max-width: 1050px;
         padding-top: 2rem;
         padding-bottom: 4rem;
     }
@@ -63,38 +63,34 @@ st.markdown(
         opacity: 0.65;
         margin-top: -0.5rem;
         margin-bottom: 1.5rem;
-        font-size: 1.05rem;
     }
 
     .section-space {
-        height: 1rem;
-    }
-
-    /* Allineamento perfetto card conguagli */
-    .settlement-row {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 0.2rem 0;
+        height: 0.7rem;
     }
 
     .settlement-amount {
-        font-size: 1.25rem;
+        font-size: 1.35rem;
         font-weight: 800;
         text-align: center;
-        white-space: nowrap;
+        margin-top: 0.3rem;
     }
 
     .debtor {
         color: #ff4b4b;
         font-weight: 700;
-        font-size: 1.1rem;
     }
 
     .creditor {
         color: #09ab3b;
         font-weight: 700;
-        font-size: 1.1rem;
+    }
+
+    .arrow {
+        text-align: center;
+        font-size: 1.5rem;
+        opacity: 0.55;
+        padding-top: 0.7rem;
     }
 
     @media (max-width: 700px) {
@@ -254,6 +250,23 @@ def save_expense(expense_date, payer, description, amount, participants):
     st.cache_data.clear()
 
 
+def update_expense(row_idx, expense_date, payer, description, amount, participants):
+    # Aggiorna la riga specifica nel Google Sheet (le righe partono da 1, row_idx include l'intestazione)
+    sheet.update(
+        range_name=f"A{row_idx}:E{row_idx}",
+        values=[
+            [
+                expense_date.strftime("%Y-%m-%d"),
+                payer,
+                description,
+                float(amount),
+                ", ".join(participants),
+            ]
+        ]
+    )
+    st.cache_data.clear()
+
+
 def delete_expense(row_idx):
     sheet.delete_rows(row_idx)
     st.cache_data.clear()
@@ -341,6 +354,61 @@ if "is_admin" not in st.session_state:
 # DIALOGS
 # ============================================================
 
+@st.dialog("Modifica spesa")
+def edit_dialog(expense):
+    st.subheader(f"Modifica: {expense['description']}")
+
+    with st.form(f"edit_form_{expense['row_idx']}"):
+        # Data
+        default_date = expense["date"] if expense["date"] else date.today()
+        new_date = st.date_input("📅 Data", value=default_date)
+
+        # Pagatore
+        default_payer_idx = MEMBERS.index(expense["payer"]) if expense["payer"] in MEMBERS else 0
+        new_payer = st.selectbox("👤 Chi ha pagato?", MEMBERS, index=default_payer_idx)
+
+        # Descrizione
+        new_desc = st.text_input("📝 Descrizione", value=expense["description"])
+
+        # Importo
+        new_amount = st.number_input("💶 Importo", min_value=0.01, value=float(expense["amount"]), step=0.50, format="%.2f")
+
+        # Partecipanti
+        valid_default_parts = [p for p in expense["participants"] if p in MEMBERS]
+        new_participants = st.multiselect("👥 Partecipanti", MEMBERS, default=valid_default_parts)
+
+        col1, col2 = st.columns(2)
+        with col1:
+            submitted = st.form_submit_button("Salva modifiche", type="primary", use_container_width=True)
+        with col2:
+            cancelled = st.form_submit_button("Annulla", use_container_width=True)
+
+        if submitted:
+            if not new_desc.strip():
+                st.error("Inserisci una descrizione.")
+            elif new_amount <= 0:
+                st.error("L'importo deve essere maggiore di zero.")
+            elif not new_participants:
+                st.error("Seleziona almeno un partecipante.")
+            else:
+                try:
+                    update_expense(
+                        row_idx=expense["row_idx"],
+                        expense_date=new_date,
+                        payer=new_payer,
+                        description=new_desc.strip(),
+                        amount=new_amount,
+                        participants=new_participants,
+                    )
+                    st.success("Spesa aggiornata con successo! 🎉")
+                    st.rerun()
+                except Exception as e:
+                    st.error(f"Errore durante l'aggiornamento: {e}")
+
+        if cancelled:
+            st.rerun()
+
+
 @st.dialog("Elimina spesa")
 def delete_dialog(expense):
     st.markdown(f"### {expense['description']}")
@@ -420,7 +488,7 @@ with st.sidebar:
 
 st.title("💰 Spese di Gruppo")
 st.markdown(
-    '<div class="app-subtitle">Gestisci le spese condivise e scopri automaticamente come pareggiare i conti in modo equo.</div>',
+    '<div class="app-subtitle">Gestisci le spese e scopri automaticamente come pareggiare i conti.</div>',
     unsafe_allow_html=True,
 )
 
@@ -457,11 +525,11 @@ with tab_dashboard:
     with col2:
         with st.container(border=True):
             st.metric("Spese", expense_count)
-            st.caption("Transazioni totali")
+            st.caption("Spese registrate")
     with col3:
         with st.container(border=True):
             st.metric("Da saldare", len(settlements))
-            st.caption("Bonifici necessari")
+            st.caption("Trasferimenti necessari")
 
     st.markdown('<div class="section-space"></div>', unsafe_allow_html=True)
 
@@ -469,31 +537,28 @@ with tab_dashboard:
         st.info("💸 Non ci sono ancora spese. Aggiungi la prima dalla scheda «Nuova spesa».")
     else:
         st.header("💸 Da saldare")
-        st.caption("I trasferimenti minimi necessari per azzerare i debiti.")
+        st.caption("I trasferimenti minimi necessari per pareggiare i conti.")
 
         if not settlements:
             st.success("🎉 Tutti i conti sono perfettamente in pari!")
         else:
             for s in settlements:
                 with st.container(border=True):
-                    # Struttura a 3 colonne pulita e bilanciata
-                    c1, c2, c3 = st.columns([1.5, 1.2, 1.5])
-                    
-                    with c1:
-                        st.caption("CHI PAGA")
+                    col1, col2, col3 = st.columns([2, 0.6, 2])
+                    with col1:
+                        st.caption("DEVE PAGARE")
                         st.markdown(f'<div class="debtor">🔴 {s["from"]}</div>', unsafe_allow_html=True)
-                    
-                    with c2:
-                        st.caption("IMPORTO DA BONIFICARE")
-                        st.markdown(f'<div class="settlement-amount">{euro(s["amount"])}</div>', unsafe_allow_html=True)
-                    
-                    with c3:
+                    with col2:
+                        st.markdown('<div class="arrow">→</div>', unsafe_allow_html=True)
+                    with col3:
                         st.caption("RICEVE")
-                        st.markdown(f'<div class="creditor" style="text-align: right;">{s["to"]} 🟢</div>', unsafe_allow_html=True)
+                        st.markdown(f'<div class="creditor">🟢 {s["to"]}</div>', unsafe_allow_html=True)
+                    
+                    st.markdown(f'<div class="settlement-amount">{euro(s["amount"])}</div>', unsafe_allow_html=True)
 
         st.markdown('<div class="section-space"></div>', unsafe_allow_html=True)
-        st.header("👥 Situazione Personale")
-        st.caption("Anticipi effettuati vs quote di spesa effettive.")
+        st.header("👥 Situazione")
+        st.caption("Quanto ha anticipato e quanto dovrebbe aver sostenuto ogni persona.")
 
         active_members = [m for m in MEMBERS if abs(balances[m]) > 0.009 or payer_totals[m] > 0 or personal_shares[m] > 0]
 
@@ -526,14 +591,14 @@ with tab_dashboard:
 # ============================================================
 
 with tab_expenses:
-    st.header("🧾 Elenco Spese")
+    st.header("🧾 Spese")
 
     if not expenses:
         st.info("Non ci sono ancora spese registrate.")
     else:
         col1, col2 = st.columns(2)
         with col1:
-            payer_filter = st.selectbox("Filtra per pagatore", ["Tutti"] + MEMBERS)
+            payer_filter = st.selectbox("Chi ha pagato", ["Tutti"] + MEMBERS)
         with col2:
             sort_order = st.selectbox("Ordina per", ["Più recenti", "Più vecchie", "Importo maggiore", "Importo minore"])
 
@@ -550,33 +615,45 @@ with tab_expenses:
         elif sort_order == "Importo minore":
             filtered.sort(key=lambda x: x["amount"])
 
-        st.caption(f"Visualizzazione di {len(filtered)} spese")
+        st.caption(f"{len(filtered)} spese visualizzate")
 
         for expense in filtered:
             with st.container(border=True):
-                c1, c2, c3 = st.columns([4, 1.3, 0.6])
-                with c1:
+                # Colonne leggermente modificate per fare spazio ai due bottoni admin (modifica ed elimina)
+                cols_layout = [4, 1.3, 0.5, 0.5] if st.session_state.is_admin else [4, 1.3]
+                cols = st.columns(cols_layout)
+
+                with cols[0]:
                     st.markdown(f"**{expense['description']}**")
+                    participants = ", ".join(expense["participants"])
                     st.caption(f"👤 {expense['payer']} · 📅 {format_date(expense['date'])}")
-                    st.caption(f"👥 {', '.join(expense['participants'])}")
-                with c2:
+                    st.caption(f"👥 {participants}")
+
+                with cols[1]:
                     st.markdown(f"**{euro(expense['amount'])}**")
-                with c3:
-                    if st.session_state.is_admin:
-                        if st.button("🗑️", key=f"del_{expense['row_idx']}", help="Elimina spesa"):
+
+                if st.session_state.is_admin:
+                    with cols[2]:
+                        if st.button("✏️", key=f"edit_{expense['row_idx']}", help="Modifica spesa"):
+                            edit_dialog(expense)
+                    with cols[3]:
+                        if st.button("🗑️", key=f"delete_{expense['row_idx']}", help="Elimina spesa"):
                             delete_dialog(expense)
 
         filtered_total = sum(e["amount"] for e in filtered)
         st.divider()
-        c1, c2 = st.columns(2)
-        with c1:
-            st.metric("Spese filtrate", len(filtered))
-        with c2:
-            st.metric("Totale filtrato", euro(filtered_total))
+        col1, col2 = st.columns(2)
+        with col1:
+            st.caption("Spese visualizzate")
+            st.metric("Numero", len(filtered))
+        with col2:
+            st.caption("Totale visualizzato")
+            st.metric("Totale", euro(filtered_total))
 
         if st.session_state.is_admin:
             st.divider()
-            with st.expander("⚠️ Gestione dati avanzata"):
+            with st.expander("⚠️ Gestione dati"):
+                st.warning("Le operazioni qui sotto modificano definitivamente il Google Sheet.")
                 if st.button("🗑️ Svuota tutte le spese", use_container_width=True):
                     clear_all_dialog(expense_count, total_amount)
 
@@ -591,16 +668,16 @@ with tab_new:
         st.info("Accedi come amministratore dalla sidebar per poter aggiungere una spesa.")
     else:
         st.header("➕ Nuova spesa")
-        st.caption("Inserisci i dettagli della spesa da condividere.")
+        st.caption("Inserisci i dettagli della spesa.")
 
         with st.form("new_expense_form", clear_on_submit=True):
             expense_date = st.date_input("📅 Data", value=date.today())
             payer = st.selectbox("👤 Chi ha pagato?", MEMBERS)
-            description = st.text_input("📝 Descrizione", placeholder="Cena, benzina, spesa...")
+            description = st.text_input("📝 Cosa?", placeholder="Cena, benzina, supermercato...")
             amount = st.number_input("💶 Importo", min_value=0.01, value=10.00, step=0.50, format="%.2f")
 
             st.divider()
-            st.subheader("👥 Partecipanti")
+            st.subheader("👥 Chi partecipa?")
             
             selection_mode = st.radio(
                 "Modalità",
@@ -613,22 +690,23 @@ with tab_new:
                 selected_participants = MEMBERS.copy()
             else:
                 selected_participants = st.multiselect(
-                    "Seleziona le persone coinvolte",
+                    "Partecipanti",
                     MEMBERS,
-                    default=MEMBERS,
+                    placeholder="Seleziona le persone coinvolte...",
                 )
 
             if selected_participants:
                 per_person = amount / len(selected_participants)
-                st.info(f"💡 Circa **{euro(per_person)}** a testa per {len(selected_participants)} partecipanti.")
+                st.info(f"💡 {euro(per_person)} per persona · {len(selected_participants)} partecipanti")
             else:
-                st.warning("⚠️ Seleziona almeno un partecipante.")
+                st.warning("Seleziona almeno un partecipante.")
 
+            st.write("")
             submitted = st.form_submit_button("💾 Salva spesa", type="primary", use_container_width=True)
 
         if submitted:
             if not description.strip():
-                st.error("Inserisci una descrizione valida.")
+                st.error("Inserisci una descrizione.")
             elif amount <= 0:
                 st.error("L'importo deve essere maggiore di zero.")
             elif not selected_participants:
@@ -642,7 +720,7 @@ with tab_new:
                         amount=amount,
                         participants=selected_participants,
                     )
-                    st.success("Spesa salvata con successo! 🎉")
+                    st.success(f"Spesa di {euro(amount)} salvata! 🎉")
                     st.rerun()
                 except Exception as error:
                     st.error(f"Errore durante il salvataggio: {error}")
