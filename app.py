@@ -1,6 +1,5 @@
 from collections import defaultdict
 from datetime import date, datetime
-from html import escape
 
 import gspread
 import streamlit as st
@@ -48,7 +47,7 @@ HEADERS = [
 
 
 # ============================================================
-# CSS RESPONSIVE AVANZATO (MOBILE & DESKTOP)
+# CSS PULITO E RESPONSIVE
 # ============================================================
 
 st.markdown(
@@ -56,10 +55,10 @@ st.markdown(
     <style>
     .block-container {
         max-width: 1120px;
-        padding-top: 2.2rem;
+        padding-top: 2rem;
         padding-bottom: 5rem;
-        padding-left: 1.2rem;
-        padding-right: 1.2rem;
+        padding-left: 1rem;
+        padding-right: 1rem;
     }
 
     [data-testid="stHeader"] {
@@ -87,7 +86,7 @@ st.markdown(
 
     .app-hero h1 {
         margin: .75rem 0 .35rem;
-        font-size: clamp(2rem, 4vw, 2.9rem);
+        font-size: clamp(1.8rem, 4vw, 2.9rem);
         line-height: 1.05;
         letter-spacing: -.045em;
         color: #f4f5f7;
@@ -97,7 +96,7 @@ st.markdown(
         margin: 0;
         max-width: 680px;
         color: #8f96a1;
-        font-size: 1rem;
+        font-size: 0.95rem;
         line-height: 1.55;
     }
 
@@ -109,7 +108,6 @@ st.markdown(
     }
 
     .summary-card {
-        min-height: 112px;
         padding: 1.15rem 1.2rem;
         border: 1px solid rgba(255,255,255,.09);
         border-radius: 18px;
@@ -131,13 +129,6 @@ st.markdown(
         font-size: 1.65rem;
         line-height: 1.15;
         font-weight: 800;
-        letter-spacing: -.03em;
-    }
-
-    .summary-help {
-        margin-top: .28rem;
-        color: #6f7783;
-        font-size: .78rem;
     }
 
     .section-heading {
@@ -148,91 +139,12 @@ st.markdown(
         margin: 0;
         color: #f1f2f4;
         font-size: 1.35rem;
-        letter-spacing: -.025em;
     }
 
     .section-heading p {
         margin: .25rem 0 0;
         color: #7f8793;
-        font-size: .9rem;
-    }
-
-    /* Stili moderni per le card di trasferimento */
-    .settlement-list {
-        display: grid;
-        gap: .8rem;
-    }
-
-    .settlement-card {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 1.15rem 1.25rem;
-        border: 1px solid rgba(255,255,255,.085);
-        border-radius: 16px;
-        background: rgba(255,255,255,.025);
-        gap: 1rem;
-    }
-
-    .settlement-info {
-        display: flex;
-        align-items: center;
-        gap: 1.2rem;
-        flex-wrap: wrap;
-    }
-
-    .settlement-person-block {
-        display: flex;
-        flex-direction: column;
-    }
-
-    .settlement-label {
-        margin-bottom: .2rem;
-        color: #737b87;
-        font-size: .67rem;
-        font-weight: 800;
-        letter-spacing: .075em;
-        text-transform: uppercase;
-    }
-
-    .person-name {
-        color: #f1f3f5;
-        font-size: 1rem;
-        font-weight: 750;
-    }
-
-    .person-name.debtor::before,
-    .person-name.creditor::before {
-        content: "";
-        display: inline-block;
-        width: .55rem;
-        height: .55rem;
-        margin-right: .45rem;
-        border-radius: 50%;
-        vertical-align: middle;
-    }
-
-    .person-name.debtor::before {
-        background: #ff4b4b;
-        box-shadow: 0 0 0 3px rgba(255,75,75,.12);
-    }
-
-    .person-name.creditor::before {
-        background: #7bc043;
-        box-shadow: 0 0 0 3px rgba(123,192,67,.12);
-    }
-
-    .settlement-arrow {
-        color: #6f7783;
-        font-size: 1.1rem;
-        font-weight: bold;
-    }
-
-    .settlement-amount {
-        color: #f7f8fa;
-        font-size: 1.25rem;
-        font-weight: 850;
-        white-space: nowrap;
+        font-size: 0.9rem;
     }
 
     .empty-success {
@@ -244,37 +156,10 @@ st.markdown(
         font-weight: 650;
     }
 
-    /* Adattamento fluido per schermi mobili */
     @media (max-width: 640px) {
         .summary-grid {
             grid-template-columns: 1fr;
-        }
-        .block-container {
-            padding-left: 0.85rem;
-            padding-right: 0.85rem;
-            padding-top: 1.2rem;
-        }
-        .settlement-card {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 0.8rem;
-            padding: 1rem;
-        }
-        .settlement-info {
-            width: 100%;
-            justify-content: space-between;
-            gap: 0.5rem;
-        }
-        .settlement-arrow {
-            display: none;
-        }
-        .settlement-amount {
-            align-self: flex-end;
-            font-size: 1.35rem;
-            border-top: 1px solid rgba(255,255,255,.06);
-            width: 100%;
-            padding-top: 0.6rem;
-            text-align: right;
+            gap: .6rem;
         }
     }
     </style>
@@ -689,7 +574,7 @@ with tab_dashboard:
         <div class="summary-grid">
             <div class="summary-card">
                 <div class="summary-label">Totale speso</div>
-                <div class="summary-value">{escape(euro(total_amount))}</div>
+                <div class="summary-value">{euro(total_amount)}</div>
             </div>
             <div class="summary-card">
                 <div class="summary-label">Spese</div>
@@ -723,28 +608,16 @@ with tab_dashboard:
                 unsafe_allow_html=True,
             )
         else:
-            settlement_html = ['<div class="settlement-list">']
             for s in settlements:
-                settlement_html.append(
-                    f"""
-                    <div class="settlement-card">
-                        <div class="settlement-info">
-                            <div class="settlement-person-block">
-                                <div class="settlement-label">Deve pagare</div>
-                                <div class="person-name debtor">{escape(s["from"])}</div>
-                            </div>
-                            <div class="settlement-arrow">→</div>
-                            <div class="settlement-person-block">
-                                <div class="settlement-label">Riceve</div>
-                                <div class="person-name creditor">{escape(s["to"])}</div>
-                            </div>
-                        </div>
-                        <div class="settlement-amount">{escape(euro(s["amount"]))}</div>
-                    </div>
-                    """
-                )
-            settlement_html.append("</div>")
-            st.markdown("".join(settlement_html), unsafe_allow_html=True)
+                with st.container(border=True):
+                    cols = st.columns([3, 2])
+                    with cols[0]:
+                        st.caption("DEVE PAGARE")
+                        st.markdown(f"🔴 **{s['from']}**")
+                        st.markdown("<div style='font-size: 0.8rem; color: #8f96a1; margin: 3px 0;'>↓ riceve</div>", unsafe_allow_html=True)
+                        st.markdown(f"🟢 **{s['to']}**")
+                    with cols[1]:
+                        st.markdown(f"<div style='text-align: right; padding-top: 15px; font-size: 1.25rem; font-weight: 850;'>{euro(s['amount'])}</div>", unsafe_allow_html=True)
 
         st.markdown(
             """
