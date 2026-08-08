@@ -48,7 +48,7 @@ HEADERS = [
 
 
 # ============================================================
-# CSS RESPONSIVE PER MOBILE & DESKTOP
+# CSS RESPONSIVE AVANZATO (MOBILE & DESKTOP)
 # ============================================================
 
 st.markdown(
@@ -56,10 +56,10 @@ st.markdown(
     <style>
     .block-container {
         max-width: 1120px;
-        padding-top: 2rem;
+        padding-top: 2.2rem;
         padding-bottom: 5rem;
-        padding-left: 1rem;
-        padding-right: 1rem;
+        padding-left: 1.2rem;
+        padding-right: 1.2rem;
     }
 
     [data-testid="stHeader"] {
@@ -67,7 +67,7 @@ st.markdown(
     }
 
     .app-hero {
-        margin: 0 0 1.5rem;
+        margin: 0 0 2rem;
     }
 
     .app-hero-kicker {
@@ -87,7 +87,7 @@ st.markdown(
 
     .app-hero h1 {
         margin: .75rem 0 .35rem;
-        font-size: clamp(1.8rem, 4vw, 2.9rem);
+        font-size: clamp(2rem, 4vw, 2.9rem);
         line-height: 1.05;
         letter-spacing: -.045em;
         color: #f4f5f7;
@@ -97,75 +97,184 @@ st.markdown(
         margin: 0;
         max-width: 680px;
         color: #8f96a1;
-        font-size: 0.95rem;
+        font-size: 1rem;
         line-height: 1.55;
     }
 
     .summary-grid {
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: .75rem;
-        margin-bottom: 1.5rem;
+        gap: .9rem;
+        margin-bottom: 2rem;
     }
 
     .summary-card {
-        padding: 1rem;
+        min-height: 112px;
+        padding: 1.15rem 1.2rem;
         border: 1px solid rgba(255,255,255,.09);
-        border-radius: 16px;
+        border-radius: 18px;
         background: linear-gradient(145deg, rgba(255,255,255,.055), rgba(255,255,255,.018));
         box-shadow: 0 10px 30px rgba(0,0,0,.12);
     }
 
     .summary-label {
         color: #8e95a0;
-        font-size: .72rem;
+        font-size: .78rem;
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: .055em;
     }
 
     .summary-value {
-        margin-top: .25rem;
+        margin-top: .35rem;
         color: #f3f4f6;
-        font-size: 1.35rem;
+        font-size: 1.65rem;
         line-height: 1.15;
         font-weight: 800;
+        letter-spacing: -.03em;
+    }
+
+    .summary-help {
+        margin-top: .28rem;
+        color: #6f7783;
+        font-size: .78rem;
     }
 
     .section-heading {
-        margin: 1.8rem 0 .75rem;
+        margin: 2.1rem 0 .95rem;
     }
 
     .section-heading h2 {
         margin: 0;
         color: #f1f2f4;
-        font-size: 1.25rem;
+        font-size: 1.35rem;
+        letter-spacing: -.025em;
     }
 
     .section-heading p {
-        margin: .2rem 0 0;
+        margin: .25rem 0 0;
         color: #7f8793;
-        font-size: 0.85rem;
+        font-size: .9rem;
+    }
+
+    /* Stili moderni per le card di trasferimento */
+    .settlement-list {
+        display: grid;
+        gap: .8rem;
+    }
+
+    .settlement-card {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1.15rem 1.25rem;
+        border: 1px solid rgba(255,255,255,.085);
+        border-radius: 16px;
+        background: rgba(255,255,255,.025);
+        gap: 1rem;
+    }
+
+    .settlement-info {
+        display: flex;
+        align-items: center;
+        gap: 1.2rem;
+        flex-wrap: wrap;
+    }
+
+    .settlement-person-block {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .settlement-label {
+        margin-bottom: .2rem;
+        color: #737b87;
+        font-size: .67rem;
+        font-weight: 800;
+        letter-spacing: .075em;
+        text-transform: uppercase;
+    }
+
+    .person-name {
+        color: #f1f3f5;
+        font-size: 1rem;
+        font-weight: 750;
+    }
+
+    .person-name.debtor::before,
+    .person-name.creditor::before {
+        content: "";
+        display: inline-block;
+        width: .55rem;
+        height: .55rem;
+        margin-right: .45rem;
+        border-radius: 50%;
+        vertical-align: middle;
+    }
+
+    .person-name.debtor::before {
+        background: #ff4b4b;
+        box-shadow: 0 0 0 3px rgba(255,75,75,.12);
+    }
+
+    .person-name.creditor::before {
+        background: #7bc043;
+        box-shadow: 0 0 0 3px rgba(123,192,67,.12);
+    }
+
+    .settlement-arrow {
+        color: #6f7783;
+        font-size: 1.1rem;
+        font-weight: bold;
+    }
+
+    .settlement-amount {
+        color: #f7f8fa;
+        font-size: 1.25rem;
+        font-weight: 850;
+        white-space: nowrap;
     }
 
     .empty-success {
-        padding: 1rem;
+        padding: 1rem 1.15rem;
         border: 1px solid rgba(123,192,67,.18);
-        border-radius: 14px;
+        border-radius: 15px;
         background: rgba(123,192,67,.055);
         color: #a9d982;
         font-weight: 650;
     }
 
+    /* Adattamento fluido per schermi mobili */
     @media (max-width: 640px) {
         .summary-grid {
             grid-template-columns: 1fr;
-            gap: .5rem;
         }
         .block-container {
-            padding-top: 1rem;
-            padding-left: 0.75rem;
-            padding-right: 0.75rem;
+            padding-left: 0.85rem;
+            padding-right: 0.85rem;
+            padding-top: 1.2rem;
+        }
+        .settlement-card {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.8rem;
+            padding: 1rem;
+        }
+        .settlement-info {
+            width: 100%;
+            justify-content: space-between;
+            gap: 0.5rem;
+        }
+        .settlement-arrow {
+            display: none;
+        }
+        .settlement-amount {
+            align-self: flex-end;
+            font-size: 1.35rem;
+            border-top: 1px solid rgba(255,255,255,.06);
+            width: 100%;
+            padding-top: 0.6rem;
+            text-align: right;
         }
     }
     </style>
@@ -614,17 +723,28 @@ with tab_dashboard:
                 unsafe_allow_html=True,
             )
         else:
+            settlement_html = ['<div class="settlement-list">']
             for s in settlements:
-                with st.container(border=True):
-                    # Struttura ottimizzata e fluida per adattarsi perfettamente anche agli schermi piccoli
-                    cols = st.columns([3, 1])
-                    with cols[0]:
-                        st.caption("DEVE PAGARE")
-                        st.markdown(f"🔴 **{s['from']}**")
-                        st.markdown("<div style='font-size: 0.85rem; color: #8f96a1; margin: 4px 0;'>↓ riceve</div>", unsafe_allow_html=True)
-                        st.markdown(f"🟢 **{s['to']}**")
-                    with cols[1]:
-                        st.markdown(f"<div style='text-align: right; padding-top: 15px;'><span style='font-size: 1.1rem; font-weight: 850;'>{euro(s['amount'])}</span></div>", unsafe_allow_html=True)
+                settlement_html.append(
+                    f"""
+                    <div class="settlement-card">
+                        <div class="settlement-info">
+                            <div class="settlement-person-block">
+                                <div class="settlement-label">Deve pagare</div>
+                                <div class="person-name debtor">{escape(s["from"])}</div>
+                            </div>
+                            <div class="settlement-arrow">→</div>
+                            <div class="settlement-person-block">
+                                <div class="settlement-label">Riceve</div>
+                                <div class="person-name creditor">{escape(s["to"])}</div>
+                            </div>
+                        </div>
+                        <div class="settlement-amount">{escape(euro(s["amount"]))}</div>
+                    </div>
+                    """
+                )
+            settlement_html.append("</div>")
+            st.markdown("".join(settlement_html), unsafe_allow_html=True)
 
         st.markdown(
             """
